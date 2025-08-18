@@ -87,7 +87,15 @@ impl Scanner {
                     self.add_token(TokenType::Greater);
                 }
             }
-            '/' => self.add_token(TokenType::Slash),
+            '/' => {
+                if self.next_is('/') {
+                    while self.peek() != '\n' && self.current < self.source.len() {
+                        self.advance();
+                    }
+                } else {
+                    self.add_token(TokenType::Slash);
+                }
+            }
             _ => {
                 return Err(ScannerError {
                     message: String::from("Unexpected character."),
@@ -114,6 +122,14 @@ impl Scanner {
 
         self.advance();
         true
+    }
+
+    fn peek(&self) -> char {
+        if self.current >= self.source.len() {
+            return '\0';
+        }
+
+        self.source.as_bytes()[self.current] as char
     }
 
     fn add_token(&mut self, token_type: TokenType) {

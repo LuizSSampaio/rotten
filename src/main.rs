@@ -58,6 +58,10 @@ fn run_repl() {
             }
         }
 
+        if line.trim() == ".exit" {
+            break;
+        }
+
         run(line);
     }
 }

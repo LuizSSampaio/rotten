@@ -1,4 +1,3 @@
-mod error;
 pub mod token;
 
 pub fn run(source: String) -> anyhow::Result<()> {

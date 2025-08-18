@@ -162,7 +162,7 @@ impl Display for ScannerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[{}:{}] Lexer Error: {}\n{}",
+            "[{}:{}] Error: {}\n{}",
             self.position.row, self.position.column, self.message, self.lexeme
         )
     }

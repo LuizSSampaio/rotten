@@ -41,7 +41,9 @@ fn run_file(path: PathBuf) {
         Err(e) => panic!("Couldn't read {}: {}", display, e),
     }
 
-    lexer::run(content)
+    if lexer::run(content).is_err() {
+        panic!()
+    }
 }
 
 fn run_repl() {
@@ -64,6 +66,6 @@ fn run_repl() {
             break;
         }
 
-        lexer::run(line);
+        let _ = lexer::run(line);
     }
 }

@@ -1,3 +1,4 @@
+mod scanner;
 pub mod token;
 
 pub fn run(source: String) -> anyhow::Result<()> {

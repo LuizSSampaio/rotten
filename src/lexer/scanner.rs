@@ -39,11 +39,16 @@ impl Scanner {
         Ok(self.tokens.to_owned())
     }
 
-    fn scan_token(&mut self) -> anyhow::Result<()> {
+    fn advance(&mut self) -> char {
         let character = self.source.as_bytes()[self.current] as char;
         self.current += 1;
+        self.column += 1;
 
-        match character {
+        character
+    }
+
+    fn scan_token(&mut self) -> anyhow::Result<()> {
+        match self.advance() {
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
             '{' => self.add_token(TokenType::LeftBrace),
@@ -107,7 +112,7 @@ impl Scanner {
             return false;
         }
 
-        self.current += 1;
+        self.advance();
         true
     }
 

@@ -7,6 +7,8 @@ use std::{
 use clap::Parser;
 use log::error;
 
+mod lexer;
+
 #[derive(Debug, Parser)]
 #[command(version, about = "A rotten language trash interpreter", long_about = None)]
 struct Args {
@@ -39,7 +41,7 @@ fn run_file(path: PathBuf) {
         Err(e) => panic!("Couldn't read {}: {}", display, e),
     }
 
-    run(content)
+    lexer::run(content)
 }
 
 fn run_repl() {
@@ -62,13 +64,6 @@ fn run_repl() {
             break;
         }
 
-        run(line);
-    }
-}
-
-fn run(source: String) {
-    let tokens: Vec<&str> = source.split_whitespace().collect();
-    for token in tokens {
-        println!("{}", token);
+        lexer::run(line);
     }
 }

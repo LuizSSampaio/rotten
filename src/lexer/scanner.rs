@@ -33,7 +33,10 @@ impl Scanner {
         self.tokens.push(Token {
             kind: TokenType::EndOfFile,
             lexeme: String::new(),
-            position: TokenPosition { row: 0, column: 1 },
+            position: TokenPosition {
+                row: self.row,
+                column: self.column,
+            },
         });
 
         Ok(self.tokens.to_owned())
@@ -95,6 +98,10 @@ impl Scanner {
                 } else {
                     self.add_token(TokenType::Slash);
                 }
+            }
+            '\n' | '\0' => {
+                self.row += 1;
+                self.column = 1;
             }
             _ => {
                 return Err(ScannerError {

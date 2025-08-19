@@ -246,12 +246,17 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token_type: TokenType) {
+        const COLUMN_OFFSET: usize = 1;
+
+        let lexeme = self.source[self.start..self.current].to_string();
+        let column = self.column - lexeme.len() + COLUMN_OFFSET;
+
         self.tokens.push(Token {
             kind: token_type,
-            lexeme: self.source[self.start..self.current].to_string(),
+            lexeme,
             position: TokenPosition {
                 row: self.row,
-                column: self.column,
+                column,
             },
         });
     }

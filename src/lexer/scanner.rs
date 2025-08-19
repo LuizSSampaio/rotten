@@ -20,7 +20,7 @@ impl Scanner {
             start: 0,
             current: 0,
             row: 1,
-            column: 1,
+            column: 0,
         }
     }
 
@@ -35,7 +35,7 @@ impl Scanner {
             lexeme: String::new(),
             position: TokenPosition {
                 row: self.row,
-                column: self.column,
+                column: 1,
             },
         });
 
@@ -101,7 +101,7 @@ impl Scanner {
             }
             '\n' | '\0' => {
                 self.row += 1;
-                self.column = 1;
+                self.column = 0;
             }
             _ => {
                 return Err(ScannerError {

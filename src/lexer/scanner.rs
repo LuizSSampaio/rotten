@@ -99,6 +99,7 @@ impl Scanner {
                     self.add_token(TokenType::Slash);
                 }
             }
+            '"' => self.string()?,
             '\r' | '\t' | ' ' => self.column += 1,
             '\n' | '\0' => {
                 self.row += 1;
@@ -138,6 +139,36 @@ impl Scanner {
         }
 
         self.source.as_bytes()[self.current] as char
+    }
+
+    fn string(&mut self) -> anyhow::Result<()> {
+        while self.peek() != '"' && self.current < self.source.len() {
+            if self.peek() == '\n' {
+                self.row += 1;
+                self.column = 0;
+            }
+            self.advance();
+        }
+
+        if self.current >= self.source.len() {
+            return Err(ScannerError {
+                message: String::from("Unterminated string."),
+                lexeme: self.source[self.start..self.current].to_string(),
+                position: TokenPosition {
+                    row: self.row,
+                    column: self.column,
+                },
+            }
+            .into());
+        }
+
+        self.advance();
+
+        self.add_token(TokenType::String(
+            // Remove the '"' from the string
+            self.source[self.start + 1..self.current - 1].to_string(),
+        ));
+        Ok(())
     }
 
     fn add_token(&mut self, token_type: TokenType) {

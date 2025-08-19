@@ -100,6 +100,7 @@ impl Scanner {
                 }
             }
             '"' => self.string()?,
+            '0'..='9' => self.number()?,
             '\r' | '\t' | ' ' => self.column += 1,
             '\n' | '\0' => {
                 self.row += 1;
@@ -141,6 +142,14 @@ impl Scanner {
         self.source.as_bytes()[self.current] as char
     }
 
+    fn peek_next(&self) -> char {
+        if self.current + 1 >= self.source.len() {
+            return '\0';
+        }
+
+        self.source.as_bytes()[self.current + 1] as char
+    }
+
     fn string(&mut self) -> anyhow::Result<()> {
         while self.peek() != '"' && self.current < self.source.len() {
             if self.peek() == '\n' {
@@ -168,6 +177,37 @@ impl Scanner {
             // Remove the '"' from the string
             self.source[self.start + 1..self.current - 1].to_string(),
         ));
+        Ok(())
+    }
+
+    fn number(&mut self) -> anyhow::Result<()> {
+        while self.peek().is_numeric() {
+            self.advance();
+        }
+
+        if self.peek() == '.' && self.peek_next().is_numeric() {
+            self.advance();
+
+            while self.peek().is_numeric() {
+                self.advance();
+            }
+        }
+
+        let value = match self.source[self.start..self.current].parse::<f64>() {
+            Ok(value) => value,
+            Err(e) => {
+                return Err(ScannerError {
+                    message: e.to_string(),
+                    lexeme: self.source[self.start..self.current].to_string(),
+                    position: TokenPosition {
+                        row: self.row,
+                        column: self.column,
+                    },
+                }
+                .into());
+            }
+        };
+        self.add_token(TokenType::Number(value));
         Ok(())
     }
 

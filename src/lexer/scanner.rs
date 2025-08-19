@@ -56,7 +56,7 @@ impl Scanner {
             lexeme: String::new(),
             position: TokenPosition {
                 row: self.row,
-                column: 1,
+                column: self.column,
             },
         });
 
@@ -123,7 +123,7 @@ impl Scanner {
             '"' => self.string()?,
             '0'..='9' => self.number()?,
             'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
-            '\r' | '\t' | ' ' => self.column += 1,
+            '\r' | '\t' | ' ' => {}
             '\n' | '\0' => {
                 self.row += 1;
                 self.column = 0;

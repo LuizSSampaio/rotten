@@ -99,6 +99,7 @@ impl Scanner {
                     self.add_token(TokenType::Slash);
                 }
             }
+            '\r' | '\t' | ' ' => self.column += 1,
             '\n' | '\0' => {
                 self.row += 1;
                 self.column = 0;

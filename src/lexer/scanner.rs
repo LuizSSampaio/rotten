@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::{collections::HashMap, error::Error, fmt::Display};
 
 use crate::lexer::token::{Token, TokenPosition, TokenType};
 
@@ -10,10 +10,30 @@ pub(in crate::lexer) struct Scanner {
     current: usize,
     row: usize,
     column: usize,
+
+    keywords: HashMap<&'static str, TokenType>,
 }
 
 impl Scanner {
     pub fn new(source: String) -> Self {
+        let mut keywords = HashMap::new();
+        keywords.insert("and", TokenType::And);
+        keywords.insert("class", TokenType::Class);
+        keywords.insert("else", TokenType::Else);
+        keywords.insert("false", TokenType::False);
+        keywords.insert("for", TokenType::For);
+        keywords.insert("fun", TokenType::Fun);
+        keywords.insert("if", TokenType::If);
+        keywords.insert("nil", TokenType::Nil);
+        keywords.insert("or", TokenType::Or);
+        keywords.insert("print", TokenType::Print);
+        keywords.insert("return", TokenType::Return);
+        keywords.insert("super", TokenType::Super);
+        keywords.insert("this", TokenType::This);
+        keywords.insert("true", TokenType::True);
+        keywords.insert("var", TokenType::Var);
+        keywords.insert("while", TokenType::While);
+
         Self {
             source,
             tokens: Vec::new(),
@@ -21,6 +41,7 @@ impl Scanner {
             current: 0,
             row: 1,
             column: 0,
+            keywords,
         }
     }
 
@@ -101,6 +122,7 @@ impl Scanner {
             }
             '"' => self.string()?,
             '0'..='9' => self.number()?,
+            'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
             '\r' | '\t' | ' ' => self.column += 1,
             '\n' | '\0' => {
                 self.row += 1;
@@ -209,6 +231,18 @@ impl Scanner {
         };
         self.add_token(TokenType::Number(value));
         Ok(())
+    }
+
+    fn identifier(&mut self) {
+        while self.peek().is_alphanumeric() {
+            self.advance();
+        }
+
+        let identifier = match self.keywords.get(&self.source[self.start..self.current]) {
+            Some(identifier) => identifier.to_owned(),
+            None => TokenType::Identifier,
+        };
+        self.add_token(identifier);
     }
 
     fn add_token(&mut self, token_type: TokenType) {

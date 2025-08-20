@@ -8,6 +8,7 @@ use clap::Parser;
 use log::error;
 
 mod lexer;
+mod parser;
 
 #[derive(Debug, Parser)]
 #[command(version, about = "A rotten language trash interpreter", long_about = None)]

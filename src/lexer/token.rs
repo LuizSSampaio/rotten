@@ -49,14 +49,14 @@ pub enum TokenType {
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub(in crate::lexer) struct Token {
+pub struct Token {
     pub kind: TokenType,
     pub lexeme: String,
     pub position: TokenPosition,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub(in crate::lexer) struct TokenPosition {
+pub struct TokenPosition {
     pub row: usize,
     pub column: usize,
 }

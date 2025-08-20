@@ -85,9 +85,10 @@ impl Scanner {
                         self.reader.advance()?;
                     }
                 } else if self.reader.next_is('*') {
-                    while self.reader.peek() != '*'
-                        || self.reader.peek_next() != '/' && !self.reader.is_at_end()
-                    {
+                    while self.reader.peek() != '*' && self.reader.peek_next() != '/' {
+                        if self.reader.is_at_end() {
+                            break;
+                        }
                         self.reader.advance()?;
                     }
                     if !self.reader.is_at_end() {

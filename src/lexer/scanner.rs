@@ -3,7 +3,7 @@ use std::{collections::HashMap, error::Error, fmt::Display};
 use crate::lexer::token::{Token, TokenPosition, TokenType};
 
 pub(in crate::lexer) struct Scanner {
-    source: String,
+    source: Vec<char>,
     tokens: Vec<Token>,
 
     start: usize,
@@ -34,7 +34,7 @@ impl Scanner {
         keywords.insert("while", TokenType::While);
 
         Self {
-            source,
+            source: source.chars().collect(),
             tokens: Vec::new(),
             start: 0,
             current: 0,
@@ -62,16 +62,27 @@ impl Scanner {
         Ok(self.tokens.to_owned())
     }
 
-    fn advance(&mut self) -> char {
-        let character = self.source.as_bytes()[self.current] as char;
-        self.current += 1;
-        self.column += 1;
-
-        character
+    fn advance(&mut self) -> anyhow::Result<char> {
+        match self.source.get(self.current) {
+            Some(&c) => {
+                self.current += 1;
+                self.column += 1;
+                Ok(c)
+            }
+            None => Err(ScannerError {
+                message: String::from("Unexpected character."),
+                lexeme: self.source[self.start..self.current].iter().collect(),
+                position: TokenPosition {
+                    row: self.row,
+                    column: self.column,
+                },
+            }
+            .into()),
+        }
     }
 
     fn scan_token(&mut self) -> anyhow::Result<()> {
-        match self.advance() {
+        match self.advance()? {
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
             '{' => self.add_token(TokenType::LeftBrace),
@@ -113,14 +124,14 @@ impl Scanner {
             '/' => {
                 if self.next_is('/') {
                     while self.peek() != '\n' && self.current < self.source.len() {
-                        self.advance();
+                        self.advance()?;
                     }
                 } else if self.next_is('*') {
                     while self.peek() != '*'
                         && self.peek_next() != '/'
                         && self.current < self.source.len()
                     {
-                        self.advance();
+                        self.advance()?;
                     }
                 } else {
                     self.add_token(TokenType::Slash);
@@ -137,7 +148,7 @@ impl Scanner {
             _ => {
                 return Err(ScannerError {
                     message: String::from("Unexpected character."),
-                    lexeme: self.source[self.start..self.current].to_string(),
+                    lexeme: self.source[self.start..self.current].iter().collect(),
                     position: TokenPosition {
                         row: self.row,
                         column: self.column,
@@ -154,28 +165,19 @@ impl Scanner {
         if self.current >= self.source.len() {
             return false;
         }
-        if self.source.as_bytes()[self.current] as char != expected {
-            return false;
+        if self.source[self.current] == expected {
+            let _ = self.advance();
+            return true;
         }
-
-        self.advance();
-        true
+        false
     }
 
     fn peek(&self) -> char {
-        if self.current >= self.source.len() {
-            return '\0';
-        }
-
-        self.source.as_bytes()[self.current] as char
+        self.source.get(self.current).copied().unwrap_or('\0')
     }
 
     fn peek_next(&self) -> char {
-        if self.current + 1 >= self.source.len() {
-            return '\0';
-        }
-
-        self.source.as_bytes()[self.current + 1] as char
+        self.source.get(self.current + 1).copied().unwrap_or('\0')
     }
 
     fn string(&mut self) -> anyhow::Result<()> {
@@ -184,13 +186,13 @@ impl Scanner {
                 self.row += 1;
                 self.column = 0;
             }
-            self.advance();
+            self.advance()?;
         }
 
         if self.current >= self.source.len() {
             return Err(ScannerError {
                 message: String::from("Unterminated string."),
-                lexeme: self.source[self.start..self.current].to_string(),
+                lexeme: self.source[self.start..self.current].iter().collect(),
                 position: TokenPosition {
                     row: self.row,
                     column: self.column,
@@ -199,62 +201,64 @@ impl Scanner {
             .into());
         }
 
-        self.advance();
+        self.advance()?;
 
         self.add_token(TokenType::String(
             // Remove the '"' from the string
-            self.source[self.start + 1..self.current - 1].to_string(),
+            self.source[self.start + 1..self.current - 1]
+                .iter()
+                .collect(),
         ));
         Ok(())
     }
 
     fn number(&mut self) -> anyhow::Result<()> {
         while self.peek().is_numeric() {
-            self.advance();
+            self.advance()?;
         }
 
         if self.peek() == '.' && self.peek_next().is_numeric() {
-            self.advance();
+            self.advance()?;
 
             while self.peek().is_numeric() {
-                self.advance();
+                self.advance()?;
             }
         }
 
-        let value = match self.source[self.start..self.current].parse::<f64>() {
-            Ok(value) => value,
-            Err(e) => {
-                return Err(ScannerError {
-                    message: e.to_string(),
-                    lexeme: self.source[self.start..self.current].to_string(),
-                    position: TokenPosition {
-                        row: self.row,
-                        column: self.column,
-                    },
-                }
-                .into());
-            }
-        };
+        let value = self.source[self.start..self.current]
+            .iter()
+            .collect::<String>()
+            .parse::<f64>()
+            .map_err(|e| ScannerError {
+                message: e.to_string(),
+                lexeme: self.source[self.start..self.current].iter().collect(),
+                position: TokenPosition {
+                    row: self.row,
+                    column: self.column,
+                },
+            })?;
         self.add_token(TokenType::Number(value));
         Ok(())
     }
 
     fn identifier(&mut self) {
         while self.peek().is_alphanumeric() {
-            self.advance();
+            let _ = self.advance();
         }
 
-        let identifier = match self.keywords.get(&self.source[self.start..self.current]) {
-            Some(identifier) => identifier.to_owned(),
-            None => TokenType::Identifier,
-        };
-        self.add_token(identifier);
+        let slice: String = self.source[self.start..self.current].iter().collect();
+        let token_type = self
+            .keywords
+            .get(&*slice)
+            .unwrap_or(&TokenType::Identifier)
+            .clone();
+        self.add_token(token_type);
     }
 
     fn add_token(&mut self, token_type: TokenType) {
         const COLUMN_OFFSET: usize = 1;
 
-        let lexeme = self.source[self.start..self.current].to_string();
+        let lexeme: String = self.source[self.start..self.current].iter().collect();
         let column = self.column - lexeme.len() + COLUMN_OFFSET;
 
         self.tokens.push(Token {

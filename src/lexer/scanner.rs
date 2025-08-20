@@ -151,14 +151,14 @@ impl Scanner {
     }
 
     fn number(&mut self) -> Result<()> {
-        while self.reader.peek().is_numeric() {
+        while self.reader.peek().is_ascii_digit() {
             self.reader.advance()?;
         }
 
-        if self.reader.peek() == '.' && self.reader.peek_next().is_numeric() {
+        if self.reader.peek() == '.' && self.reader.peek_next().is_ascii_digit() {
             self.reader.advance()?;
 
-            while self.reader.peek().is_numeric() {
+            while self.reader.peek().is_ascii_digit() {
                 self.reader.advance()?;
             }
         }
@@ -177,7 +177,7 @@ impl Scanner {
     }
 
     fn identifier(&mut self) -> Result<()> {
-        while self.reader.peek().is_alphanumeric() {
+        while self.reader.peek().is_ascii_alphanumeric() {
             self.reader.advance()?;
         }
 

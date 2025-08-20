@@ -1,88 +1,46 @@
-use std::{collections::HashMap, error::Error, fmt::Display};
+use std::collections::HashMap;
 
+use anyhow::Result;
+
+use crate::lexer::emitter::Emitter;
+use crate::lexer::error::LexerError;
+use crate::lexer::keywords;
+use crate::lexer::reader::Reader;
 use crate::lexer::token::{Token, TokenPosition, TokenType};
 
 pub(in crate::lexer) struct Scanner {
-    source: Vec<char>,
-    tokens: Vec<Token>,
-
-    start: usize,
-    current: usize,
-    row: usize,
-    column: usize,
-
+    reader: Reader,
     keywords: HashMap<&'static str, TokenType>,
+    emitter: Emitter,
 }
 
 impl Scanner {
     pub fn new(source: String) -> Self {
-        let mut keywords = HashMap::new();
-        keywords.insert("and", TokenType::And);
-        keywords.insert("class", TokenType::Class);
-        keywords.insert("else", TokenType::Else);
-        keywords.insert("false", TokenType::False);
-        keywords.insert("for", TokenType::For);
-        keywords.insert("fun", TokenType::Fun);
-        keywords.insert("if", TokenType::If);
-        keywords.insert("nil", TokenType::Nil);
-        keywords.insert("or", TokenType::Or);
-        keywords.insert("return", TokenType::Return);
-        keywords.insert("super", TokenType::Super);
-        keywords.insert("this", TokenType::This);
-        keywords.insert("true", TokenType::True);
-        keywords.insert("var", TokenType::Var);
-        keywords.insert("while", TokenType::While);
-
         Self {
-            source: source.chars().collect(),
-            tokens: Vec::new(),
-            start: 0,
-            current: 0,
-            row: 1,
-            column: 0,
-            keywords,
+            reader: Reader::new(source),
+            keywords: keywords::create_keywords(),
+            emitter: Emitter::new(),
         }
     }
 
-    pub fn scan_tokens(&mut self) -> anyhow::Result<Vec<Token>> {
-        while self.current < self.source.len() {
-            self.start = self.current;
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token>> {
+        while !self.reader.is_at_end() {
+            self.reader.start = self.reader.current;
             self.scan_token()?
         }
 
-        self.tokens.push(Token {
-            kind: TokenType::EndOfFile,
-            lexeme: String::new(),
-            position: TokenPosition {
-                row: self.row,
-                column: self.column,
-            },
-        });
+        self.emitter.add_token(
+            TokenType::EndOfFile,
+            String::new(),
+            self.reader.row,
+            self.reader.column,
+        );
 
-        Ok(self.tokens.to_owned())
+        Ok(self.emitter.tokens.clone())
     }
 
-    fn advance(&mut self) -> anyhow::Result<char> {
-        match self.source.get(self.current) {
-            Some(&c) => {
-                self.current += 1;
-                self.column += 1;
-                Ok(c)
-            }
-            None => Err(ScannerError {
-                message: String::from("Unexpected character."),
-                lexeme: self.source[self.start..self.current].iter().collect(),
-                position: TokenPosition {
-                    row: self.row,
-                    column: self.column,
-                },
-            }
-            .into()),
-        }
-    }
-
-    fn scan_token(&mut self) -> anyhow::Result<()> {
-        match self.advance()? {
+    fn scan_token(&mut self) -> Result<()> {
+        match self.reader.advance()? {
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
             '{' => self.add_token(TokenType::LeftBrace),
@@ -94,44 +52,47 @@ impl Scanner {
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
             '!' => {
-                if self.next_is('=') {
+                if self.reader.next_is('=') {
                     self.add_token(TokenType::BangEqual);
                 } else {
                     self.add_token(TokenType::Bang);
                 }
             }
             '=' => {
-                if self.next_is('=') {
+                if self.reader.next_is('=') {
                     self.add_token(TokenType::EqualEqual);
                 } else {
                     self.add_token(TokenType::Equal);
                 }
             }
             '<' => {
-                if self.next_is('=') {
+                if self.reader.next_is('=') {
                     self.add_token(TokenType::LessEqual);
                 } else {
                     self.add_token(TokenType::Less);
                 }
             }
             '>' => {
-                if self.next_is('=') {
+                if self.reader.next_is('=') {
                     self.add_token(TokenType::GreaterEqual);
                 } else {
                     self.add_token(TokenType::Greater);
                 }
             }
             '/' => {
-                if self.next_is('/') {
-                    while self.peek() != '\n' && self.current < self.source.len() {
-                        self.advance()?;
+                if self.reader.next_is('/') {
+                    while self.reader.peek() != '\n' && !self.reader.is_at_end() {
+                        self.reader.advance()?;
                     }
-                } else if self.next_is('*') {
-                    while self.peek() != '*'
-                        && self.peek_next() != '/'
-                        && self.current < self.source.len()
+                } else if self.reader.next_is('*') {
+                    while self.reader.peek() != '*'
+                        || self.reader.peek_next() != '/' && !self.reader.is_at_end()
                     {
-                        self.advance()?;
+                        self.reader.advance()?;
+                    }
+                    if !self.reader.is_at_end() {
+                        self.reader.advance()?; // *
+                        self.reader.advance()?; // /
                     }
                 } else {
                     self.add_token(TokenType::Slash);
@@ -139,19 +100,18 @@ impl Scanner {
             }
             '"' => self.string()?,
             '0'..='9' => self.number()?,
-            'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
+            'a'..='z' | 'A'..='Z' | '_' => self.identifier()?,
             '\r' | '\t' | ' ' => {}
             '\n' | '\0' => {
-                self.row += 1;
-                self.column = 0;
+                self.reader.next_row();
             }
             _ => {
-                return Err(ScannerError {
+                return Err(LexerError {
                     message: String::from("Unexpected character."),
-                    lexeme: self.source[self.start..self.current].iter().collect(),
+                    lexeme: self.reader.current_lexeme(),
                     position: TokenPosition {
-                        row: self.row,
-                        column: self.column,
+                        row: self.reader.row,
+                        column: self.reader.column,
                     },
                 }
                 .into());
@@ -161,132 +121,81 @@ impl Scanner {
         Ok(())
     }
 
-    fn next_is(&mut self, expected: char) -> bool {
-        if self.current >= self.source.len() {
-            return false;
-        }
-        if self.source[self.current] == expected {
-            let _ = self.advance();
-            return true;
-        }
-        false
-    }
-
-    fn peek(&self) -> char {
-        self.source.get(self.current).copied().unwrap_or('\0')
-    }
-
-    fn peek_next(&self) -> char {
-        self.source.get(self.current + 1).copied().unwrap_or('\0')
-    }
-
-    fn string(&mut self) -> anyhow::Result<()> {
-        while self.peek() != '"' && self.current < self.source.len() {
-            if self.peek() == '\n' {
-                self.row += 1;
-                self.column = 0;
+    fn string(&mut self) -> Result<()> {
+        while self.reader.peek() != '"' && !self.reader.is_at_end() {
+            if self.reader.peek() == '\n' {
+                self.reader.row += 1;
+                self.reader.column = 0;
             }
-            self.advance()?;
+            self.reader.advance()?;
         }
 
-        if self.current >= self.source.len() {
-            return Err(ScannerError {
+        if self.reader.is_at_end() {
+            return Err(LexerError {
                 message: String::from("Unterminated string."),
-                lexeme: self.source[self.start..self.current].iter().collect(),
+                lexeme: self.reader.current_lexeme(),
                 position: TokenPosition {
-                    row: self.row,
-                    column: self.column,
+                    row: self.reader.row,
+                    column: self.reader.column,
                 },
             }
             .into());
         }
 
-        self.advance()?;
+        self.reader.advance()?; // "
 
-        self.add_token(TokenType::String(
-            // Remove the '"' from the string
-            self.source[self.start + 1..self.current - 1]
-                .iter()
-                .collect(),
-        ));
+        let value: String = self.reader.source[self.reader.start + 1..self.reader.current - 1]
+            .iter()
+            .collect();
+        self.add_token(TokenType::String(value));
         Ok(())
     }
 
-    fn number(&mut self) -> anyhow::Result<()> {
-        while self.peek().is_numeric() {
-            self.advance()?;
+    fn number(&mut self) -> Result<()> {
+        while self.reader.peek().is_numeric() {
+            self.reader.advance()?;
         }
 
-        if self.peek() == '.' && self.peek_next().is_numeric() {
-            self.advance()?;
+        if self.reader.peek() == '.' && self.reader.peek_next().is_numeric() {
+            self.reader.advance()?;
 
-            while self.peek().is_numeric() {
-                self.advance()?;
+            while self.reader.peek().is_numeric() {
+                self.reader.advance()?;
             }
         }
 
-        let value = self.source[self.start..self.current]
-            .iter()
-            .collect::<String>()
-            .parse::<f64>()
-            .map_err(|e| ScannerError {
-                message: e.to_string(),
-                lexeme: self.source[self.start..self.current].iter().collect(),
-                position: TokenPosition {
-                    row: self.row,
-                    column: self.column,
-                },
-            })?;
+        let lexeme = self.reader.current_lexeme();
+        let value = lexeme.parse::<f64>().map_err(|e| LexerError {
+            message: e.to_string(),
+            lexeme: lexeme.clone(),
+            position: TokenPosition {
+                row: self.reader.row,
+                column: self.reader.column,
+            },
+        })?;
         self.add_token(TokenType::Number(value));
         Ok(())
     }
 
-    fn identifier(&mut self) {
-        while self.peek().is_alphanumeric() {
-            let _ = self.advance();
+    fn identifier(&mut self) -> Result<()> {
+        while self.reader.peek().is_alphanumeric() {
+            self.reader.advance()?;
         }
 
-        let slice: String = self.source[self.start..self.current].iter().collect();
+        let slice = self.reader.current_lexeme();
         let token_type = self
             .keywords
             .get(&*slice)
-            .unwrap_or(&TokenType::Identifier)
-            .clone();
+            .cloned()
+            .unwrap_or(TokenType::Identifier);
         self.add_token(token_type);
+        Ok(())
     }
 
     fn add_token(&mut self, token_type: TokenType) {
-        const COLUMN_OFFSET: usize = 1;
-
-        let lexeme: String = self.source[self.start..self.current].iter().collect();
-        let column = self.column - lexeme.len() + COLUMN_OFFSET;
-
-        self.tokens.push(Token {
-            kind: token_type,
-            lexeme,
-            position: TokenPosition {
-                row: self.row,
-                column,
-            },
-        });
+        let lexeme = self.reader.current_lexeme();
+        let column = self.reader.calculate_column(lexeme.len());
+        self.emitter
+            .add_token(token_type, lexeme, self.reader.row, column);
     }
 }
-
-#[derive(Debug, Clone)]
-struct ScannerError {
-    message: String,
-    lexeme: String,
-    position: TokenPosition,
-}
-
-impl Display for ScannerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[{}:{}] Error: {}\n{}",
-            self.position.row, self.position.column, self.message, self.lexeme
-        )
-    }
-}
-
-impl Error for ScannerError {}

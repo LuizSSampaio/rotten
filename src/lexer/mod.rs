@@ -1,5 +1,9 @@
 use crate::lexer::scanner::Scanner;
 
+mod emitter;
+mod error;
+mod keywords;
+mod reader;
 mod scanner;
 pub mod token;
 

@@ -115,6 +115,13 @@ impl Scanner {
                     while self.peek() != '\n' && self.current < self.source.len() {
                         self.advance();
                     }
+                } else if self.next_is('*') {
+                    while self.peek() != '*'
+                        && self.peek_next() != '/'
+                        && self.current < self.source.len()
+                    {
+                        self.advance();
+                    }
                 } else {
                     self.add_token(TokenType::Slash);
                 }

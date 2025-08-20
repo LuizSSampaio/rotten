@@ -4,11 +4,11 @@ use crate::lexer::error::LexerError;
 use crate::lexer::token::TokenPosition;
 
 pub struct Reader {
-    pub source: Vec<char>,
-    pub start: usize,
-    pub current: usize,
-    pub row: usize,
-    pub column: usize,
+    source: Vec<char>,
+    start: usize,
+    current: usize,
+    row: usize,
+    column: usize,
 }
 
 impl Reader {
@@ -76,5 +76,17 @@ impl Reader {
 
     pub fn calculate_column(&self, lexeme_len: usize) -> usize {
         self.column - lexeme_len
+    }
+
+    pub fn start_to_current(&mut self) {
+        self.start = self.current;
+    }
+
+    pub fn row(&self) -> usize {
+        self.row
+    }
+
+    pub fn column(&self) -> usize {
+        self.column
     }
 }

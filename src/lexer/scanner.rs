@@ -25,18 +25,18 @@ impl Scanner {
 
     pub fn scan_tokens(&mut self) -> Result<Vec<Token>> {
         while !self.reader.is_at_end() {
-            self.reader.start = self.reader.current;
+            self.reader.start_to_current();
             self.scan_token()?
         }
 
         self.emitter.add_token(
             TokenType::EndOfFile,
             String::new(),
-            self.reader.row,
-            self.reader.column,
+            self.reader.row(),
+            self.reader.column(),
         );
 
-        Ok(self.emitter.tokens.clone())
+        Ok(self.emitter.tokens())
     }
 
     fn scan_token(&mut self) -> Result<()> {
@@ -110,8 +110,8 @@ impl Scanner {
                     message: String::from("Unexpected character."),
                     lexeme: self.reader.current_lexeme(),
                     position: TokenPosition {
-                        row: self.reader.row,
-                        column: self.reader.column,
+                        row: self.reader.row(),
+                        column: self.reader.column(),
                     },
                 }
                 .into());
@@ -124,8 +124,7 @@ impl Scanner {
     fn string(&mut self) -> Result<()> {
         while self.reader.peek() != '"' && !self.reader.is_at_end() {
             if self.reader.peek() == '\n' {
-                self.reader.row += 1;
-                self.reader.column = 0;
+                self.reader.next_row();
             }
             self.reader.advance()?;
         }
@@ -135,8 +134,8 @@ impl Scanner {
                 message: String::from("Unterminated string."),
                 lexeme: self.reader.current_lexeme(),
                 position: TokenPosition {
-                    row: self.reader.row,
-                    column: self.reader.column,
+                    row: self.reader.row(),
+                    column: self.reader.column(),
                 },
             }
             .into());
@@ -144,9 +143,8 @@ impl Scanner {
 
         self.reader.advance()?; // "
 
-        let value: String = self.reader.source[self.reader.start + 1..self.reader.current - 1]
-            .iter()
-            .collect();
+        let lexeme = self.reader.current_lexeme();
+        let value = lexeme[1..lexeme.len() - 1].to_string();
         self.add_token(TokenType::String(value));
         Ok(())
     }
@@ -169,8 +167,8 @@ impl Scanner {
             message: e.to_string(),
             lexeme: lexeme.clone(),
             position: TokenPosition {
-                row: self.reader.row,
-                column: self.reader.column,
+                row: self.reader.row(),
+                column: self.reader.column(),
             },
         })?;
         self.add_token(TokenType::Number(value));
@@ -196,6 +194,6 @@ impl Scanner {
         let lexeme = self.reader.current_lexeme();
         let column = self.reader.calculate_column(lexeme.len());
         self.emitter
-            .add_token(token_type, lexeme, self.reader.row, column);
+            .add_token(token_type, lexeme, self.reader.row(), column);
     }
 }

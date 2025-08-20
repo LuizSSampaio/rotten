@@ -198,3 +198,239 @@ impl Scanner {
             .add_token(token_type, lexeme, self.reader.row(), column);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::token::{Token, TokenPosition, TokenType};
+
+    fn pos(row: usize, col: usize) -> TokenPosition {
+        TokenPosition { row, column: col }
+    }
+
+    fn token(kind: TokenType, lexeme: &str, pos: TokenPosition) -> Token {
+        Token {
+            kind,
+            lexeme: lexeme.to_string(),
+            position: pos,
+        }
+    }
+
+    fn error(message: LexerErrorMessage, lexeme: &str, pos: TokenPosition) -> LexerError {
+        LexerError {
+            message,
+            lexeme: lexeme.to_string(),
+            position: pos,
+        }
+    }
+
+    #[test]
+    fn simple_arithmetic() {
+        let input = "1 + 2;".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Number(1.0), "1", pos(1, 1)),
+            token(TokenType::Plus, "+", pos(1, 3)),
+            token(TokenType::Number(2.0), "2", pos(1, 5)),
+            token(TokenType::Semicolon, ";", pos(1, 6)),
+            token(TokenType::EndOfFile, "", pos(1, 7)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn keywords_and_identifiers() {
+        let input = "var x = 5.42;".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Var, "var", pos(1, 1)),
+            token(TokenType::Identifier, "x", pos(1, 5)),
+            token(TokenType::Equal, "=", pos(1, 7)),
+            token(TokenType::Number(5.42), "5.42", pos(1, 9)),
+            token(TokenType::Semicolon, ";", pos(1, 13)),
+            token(TokenType::EndOfFile, "", pos(1, 14)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn string() {
+        let input = "\"hello\"".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(
+                TokenType::String("hello".to_string()),
+                "\"hello\"",
+                pos(1, 1),
+            ),
+            token(TokenType::EndOfFile, "", pos(1, 8)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn line_comment() {
+        let input = "// comment\nvar y = 10;".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Var, "var", pos(2, 1)),
+            token(TokenType::Identifier, "y", pos(2, 5)),
+            token(TokenType::Equal, "=", pos(2, 7)),
+            token(TokenType::Number(10.0), "10", pos(2, 9)),
+            token(TokenType::Semicolon, ";", pos(2, 11)),
+            token(TokenType::EndOfFile, "", pos(2, 12)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn block_comment() {
+        let input = "/* comment */ var z = 1;".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Var, "var", pos(1, 15)),
+            token(TokenType::Identifier, "z", pos(1, 19)),
+            token(TokenType::Equal, "=", pos(1, 21)),
+            token(TokenType::Number(1.0), "1", pos(1, 23)),
+            token(TokenType::Semicolon, ";", pos(1, 24)),
+            token(TokenType::EndOfFile, "", pos(1, 25)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn multi_char_operators() {
+        let input = "a != b == c".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Identifier, "a", pos(1, 1)),
+            token(TokenType::BangEqual, "!=", pos(1, 3)),
+            token(TokenType::Identifier, "b", pos(1, 6)),
+            token(TokenType::EqualEqual, "==", pos(1, 8)),
+            token(TokenType::Identifier, "c", pos(1, 11)),
+            token(TokenType::EndOfFile, "", pos(1, 12)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn less_equal() {
+        let input = "1 <= 2".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Number(1.0), "1", pos(1, 1)),
+            token(TokenType::LessEqual, "<=", pos(1, 3)),
+            token(TokenType::Number(2.0), "2", pos(1, 6)),
+            token(TokenType::EndOfFile, "", pos(1, 7)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn greater_equal() {
+        let input = "1 >= 2".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(TokenType::Number(1.0), "1", pos(1, 1)),
+            token(TokenType::GreaterEqual, ">=", pos(1, 3)),
+            token(TokenType::Number(2.0), "2", pos(1, 6)),
+            token(TokenType::EndOfFile, "", pos(1, 7)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn unexpected_character() {
+        let input = "@".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens();
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            error(LexerErrorMessage::UnexpectedCharacter, "@", pos(1, 2)).to_string()
+        );
+    }
+
+    #[test]
+    fn unterminated_string() {
+        let input = "\"unterminated".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens();
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            error(
+                LexerErrorMessage::UnterminatedString,
+                "\"unterminated",
+                pos(1, 14)
+            )
+            .to_string()
+        );
+    }
+
+    #[test]
+    fn empty_input() {
+        let input = "".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![token(TokenType::EndOfFile, "", pos(1, 1))];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn whitespace_only() {
+        let input = " \t\n ".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![token(TokenType::EndOfFile, "", pos(2, 2))];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn multiline_string() {
+        let input = "\"line1\\nline2\"".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![
+            token(
+                TokenType::String("line1\\nline2".to_string()),
+                "\"line1\\nline2\"",
+                pos(1, 1),
+            ),
+            token(TokenType::EndOfFile, "", pos(1, 15)),
+        ];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn unterminated_block_comment() {
+        let input = "/* unterminated".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens().unwrap();
+        let expected = vec![token(TokenType::EndOfFile, "", pos(1, 16))];
+        assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn unicode_identifier() {
+        let input = "π = 3.14;".to_string();
+        let mut scanner = Scanner::new(input);
+        let res = scanner.scan_tokens();
+        assert!(res.is_err());
+        let err = res.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            error(LexerErrorMessage::UnexpectedCharacter, "π", pos(1, 2)).to_string()
+        );
+    }
+}

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 
 use crate::lexer::emitter::Emitter;
-use crate::lexer::error::LexerError;
+use crate::lexer::error::{LexerError, LexerErrorMessage};
 use crate::lexer::keywords;
 use crate::lexer::reader::Reader;
 use crate::lexer::token::{Token, TokenPosition, TokenType};
@@ -108,7 +108,7 @@ impl Scanner {
             }
             _ => {
                 return Err(LexerError {
-                    message: String::from("Unexpected character."),
+                    message: LexerErrorMessage::UnexpectedCharacter,
                     lexeme: self.reader.current_lexeme(),
                     position: TokenPosition {
                         row: self.reader.row(),
@@ -132,7 +132,7 @@ impl Scanner {
 
         if self.reader.is_at_end() {
             return Err(LexerError {
-                message: String::from("Unterminated string."),
+                message: LexerErrorMessage::UnterminatedString,
                 lexeme: self.reader.current_lexeme(),
                 position: TokenPosition {
                     row: self.reader.row(),
@@ -164,8 +164,8 @@ impl Scanner {
         }
 
         let lexeme = self.reader.current_lexeme();
-        let value = lexeme.parse::<f64>().map_err(|e| LexerError {
-            message: e.to_string(),
+        let value = lexeme.parse::<f64>().map_err(|_| LexerError {
+            message: LexerErrorMessage::NumberParseError,
             lexeme: lexeme.clone(),
             position: TokenPosition {
                 row: self.reader.row(),

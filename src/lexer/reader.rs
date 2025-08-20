@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::lexer::error::LexerError;
+use crate::lexer::error::{LexerError, LexerErrorMessage};
 use crate::lexer::token::TokenPosition;
 
 pub struct Reader {
@@ -30,7 +30,7 @@ impl Reader {
                 Ok(c)
             }
             None => Err(LexerError {
-                message: String::from("Unexpected character."),
+                message: LexerErrorMessage::UnexpectedCharacter,
                 lexeme: self.current_lexeme(),
                 position: TokenPosition {
                     row: self.row,

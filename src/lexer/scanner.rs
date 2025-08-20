@@ -224,11 +224,14 @@ mod tests {
         }
     }
 
+    fn scan(input: &str) -> Result<Vec<Token>> {
+        let mut scanner = Scanner::new(input.to_string());
+        scanner.scan_tokens()
+    }
+
     #[test]
     fn simple_arithmetic() {
-        let input = "1 + 2;".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("1 + 2;").unwrap();
         let expected = vec![
             token(TokenType::Number(1.0), "1", pos(1, 1)),
             token(TokenType::Plus, "+", pos(1, 3)),
@@ -241,9 +244,7 @@ mod tests {
 
     #[test]
     fn keywords_and_identifiers() {
-        let input = "var x = 5.42;".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("var x = 5.42;").unwrap();
         let expected = vec![
             token(TokenType::Var, "var", pos(1, 1)),
             token(TokenType::Identifier, "x", pos(1, 5)),
@@ -257,9 +258,7 @@ mod tests {
 
     #[test]
     fn string() {
-        let input = "\"hello\"".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("\"hello\"").unwrap();
         let expected = vec![
             token(
                 TokenType::String("hello".to_string()),
@@ -273,9 +272,7 @@ mod tests {
 
     #[test]
     fn line_comment() {
-        let input = "// comment\nvar y = 10;".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("// comment\nvar y = 10;").unwrap();
         let expected = vec![
             token(TokenType::Var, "var", pos(2, 1)),
             token(TokenType::Identifier, "y", pos(2, 5)),
@@ -289,9 +286,7 @@ mod tests {
 
     #[test]
     fn block_comment() {
-        let input = "/* comment */ var z = 1;".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("/* comment */ var z = 1;").unwrap();
         let expected = vec![
             token(TokenType::Var, "var", pos(1, 15)),
             token(TokenType::Identifier, "z", pos(1, 19)),
@@ -305,9 +300,7 @@ mod tests {
 
     #[test]
     fn multi_char_operators() {
-        let input = "a != b == c".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("a != b == c").unwrap();
         let expected = vec![
             token(TokenType::Identifier, "a", pos(1, 1)),
             token(TokenType::BangEqual, "!=", pos(1, 3)),
@@ -321,9 +314,7 @@ mod tests {
 
     #[test]
     fn less_equal() {
-        let input = "1 <= 2".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("1 <= 2").unwrap();
         let expected = vec![
             token(TokenType::Number(1.0), "1", pos(1, 1)),
             token(TokenType::LessEqual, "<=", pos(1, 3)),
@@ -335,9 +326,7 @@ mod tests {
 
     #[test]
     fn greater_equal() {
-        let input = "1 >= 2".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("1 >= 2").unwrap();
         let expected = vec![
             token(TokenType::Number(1.0), "1", pos(1, 1)),
             token(TokenType::GreaterEqual, ">=", pos(1, 3)),
@@ -349,9 +338,7 @@ mod tests {
 
     #[test]
     fn unexpected_character() {
-        let input = "@".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens();
+        let res = scan("@");
         assert!(res.is_err());
         let err = res.unwrap_err();
         assert_eq!(
@@ -362,9 +349,7 @@ mod tests {
 
     #[test]
     fn unterminated_string() {
-        let input = "\"unterminated".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens();
+        let res = scan("\"unterminated");
         assert!(res.is_err());
         let err = res.unwrap_err();
         assert_eq!(
@@ -380,27 +365,21 @@ mod tests {
 
     #[test]
     fn empty_input() {
-        let input = "".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("").unwrap();
         let expected = vec![token(TokenType::EndOfFile, "", pos(1, 1))];
         assert_eq!(res, expected);
     }
 
     #[test]
     fn whitespace_only() {
-        let input = " \t\n ".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan(" \t\n ").unwrap();
         let expected = vec![token(TokenType::EndOfFile, "", pos(2, 2))];
         assert_eq!(res, expected);
     }
 
     #[test]
     fn multiline_string() {
-        let input = "\"line1\\nline2\"".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("\"line1\\nline2\"").unwrap();
         let expected = vec![
             token(
                 TokenType::String("line1\\nline2".to_string()),
@@ -414,18 +393,14 @@ mod tests {
 
     #[test]
     fn unterminated_block_comment() {
-        let input = "/* unterminated".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens().unwrap();
+        let res = scan("/* unterminated").unwrap();
         let expected = vec![token(TokenType::EndOfFile, "", pos(1, 16))];
         assert_eq!(res, expected);
     }
 
     #[test]
     fn unicode_identifier() {
-        let input = "π = 3.14;".to_string();
-        let mut scanner = Scanner::new(input);
-        let res = scanner.scan_tokens();
+        let res = scan("π = 3.14;");
         assert!(res.is_err());
         let err = res.unwrap_err();
         assert_eq!(

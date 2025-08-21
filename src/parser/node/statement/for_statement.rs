@@ -8,10 +8,10 @@ pub struct ForStatement {
 }
 
 impl Node for ForStatement {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_for_stmt(self)
+        visitor.visit_for_stmt::<T>(self)
     }
 }

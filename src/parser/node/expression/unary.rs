@@ -9,10 +9,10 @@ pub struct UnaryExpression {
 }
 
 impl Node for UnaryExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_unary_expr(self)
+        visitor.visit_unary_expr::<T>(self)
     }
 }

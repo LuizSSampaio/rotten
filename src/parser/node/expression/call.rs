@@ -10,10 +10,10 @@ pub struct CallExpression {
 }
 
 impl Node for CallExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_call_expr(self)
+        visitor.visit_call_expr::<T>(self)
     }
 }

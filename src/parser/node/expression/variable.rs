@@ -8,10 +8,10 @@ pub struct VariableExpression {
 }
 
 impl Node for VariableExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_variable_expr(self)
+        visitor.visit_variable_expr::<T>(self)
     }
 }

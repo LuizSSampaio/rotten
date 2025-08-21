@@ -10,10 +10,10 @@ pub struct BinaryExpression {
 }
 
 impl Node for BinaryExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_binary_expr(self)
+        visitor.visit_binary_expr::<T>(self)
     }
 }

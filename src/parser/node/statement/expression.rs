@@ -5,10 +5,10 @@ pub struct ExpressionStatement {
 }
 
 impl Node for ExpressionStatement {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_expression_stmt(self)
+        visitor.visit_expression_stmt::<T>(self)
     }
 }

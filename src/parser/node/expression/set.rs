@@ -10,10 +10,10 @@ pub struct SetExpression {
 }
 
 impl Node for SetExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_set_expr(self)
+        visitor.visit_set_expr::<T>(self)
     }
 }

@@ -15,32 +15,32 @@ pub mod expression;
 pub mod statement;
 
 pub trait Visitor {
-    fn visit_assign_expr(&mut self, expression: &mut AssignExpression) -> impl Visitor;
-    fn visit_binary_expr(&mut self, expression: &mut BinaryExpression) -> impl Visitor;
-    fn visit_call_expr(&mut self, expression: &mut CallExpression) -> impl Visitor;
-    fn visit_get_expr(&mut self, expression: &mut GetExpression) -> impl Visitor;
-    fn visit_grouping_expr(&mut self, expression: &mut GroupingExpression) -> impl Visitor;
-    fn visit_literal_expr(&mut self, expression: &mut LiteralExpression) -> impl Visitor;
-    fn visit_logical_expr(&mut self, expression: &mut LogicalExpression) -> impl Visitor;
-    fn visit_set_expr(&mut self, expression: &mut SetExpression) -> impl Visitor;
-    fn visit_super_expr(&mut self, expression: &mut SuperExpression) -> impl Visitor;
-    fn visit_this_expr(&mut self, expression: &mut ThisExpression) -> impl Visitor;
-    fn visit_unary_expr(&mut self, expression: &mut UnaryExpression) -> impl Visitor;
-    fn visit_variable_expr(&mut self, expression: &mut VariableExpression) -> impl Visitor;
+    fn visit_assign_expr<T>(&mut self, expression: &mut AssignExpression) -> T;
+    fn visit_binary_expr<T>(&mut self, expression: &mut BinaryExpression) -> T;
+    fn visit_call_expr<T>(&mut self, expression: &mut CallExpression) -> T;
+    fn visit_get_expr<T>(&mut self, expression: &mut GetExpression) -> T;
+    fn visit_grouping_expr<T>(&mut self, expression: &mut GroupingExpression) -> T;
+    fn visit_literal_expr<T>(&mut self, expression: &mut LiteralExpression) -> T;
+    fn visit_logical_expr<T>(&mut self, expression: &mut LogicalExpression) -> T;
+    fn visit_set_expr<T>(&mut self, expression: &mut SetExpression) -> T;
+    fn visit_super_expr<T>(&mut self, expression: &mut SuperExpression) -> T;
+    fn visit_this_expr<T>(&mut self, expression: &mut ThisExpression) -> T;
+    fn visit_unary_expr<T>(&mut self, expression: &mut UnaryExpression) -> T;
+    fn visit_variable_expr<T>(&mut self, expression: &mut VariableExpression) -> T;
 
-    fn visit_block_stmt(&mut self, statement: &mut BlockStatement) -> impl Visitor;
-    fn visit_class_stmt(&mut self, statement: &mut ClassStatement) -> impl Visitor;
-    fn visit_expression_stmt(&mut self, statement: &mut ExpressionStatement) -> impl Visitor;
-    fn visit_function_stmt(&mut self, statement: &mut FunctionStatement) -> impl Visitor;
-    fn visit_if_stmt(&mut self, statement: &mut IfStatement) -> impl Visitor;
-    fn visit_return_stmt(&mut self, statement: &mut ReturnStatement) -> impl Visitor;
-    fn visit_var_stmt(&mut self, statement: &mut VarStatement) -> impl Visitor;
-    fn visit_while_stmt(&mut self, statement: &mut WhileStatement) -> impl Visitor;
-    fn visit_for_stmt(&mut self, statement: &mut ForStatement) -> impl Visitor;
+    fn visit_block_stmt<T>(&mut self, statement: &mut BlockStatement) -> T;
+    fn visit_class_stmt<T>(&mut self, statement: &mut ClassStatement) -> T;
+    fn visit_expression_stmt<T>(&mut self, statement: &mut ExpressionStatement) -> T;
+    fn visit_function_stmt<T>(&mut self, statement: &mut FunctionStatement) -> T;
+    fn visit_if_stmt<T>(&mut self, statement: &mut IfStatement) -> T;
+    fn visit_return_stmt<T>(&mut self, statement: &mut ReturnStatement) -> T;
+    fn visit_var_stmt<T>(&mut self, statement: &mut VarStatement) -> T;
+    fn visit_while_stmt<T>(&mut self, statement: &mut WhileStatement) -> T;
+    fn visit_for_stmt<T>(&mut self, statement: &mut ForStatement) -> T;
 }
 
 pub trait Node {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized;
 }

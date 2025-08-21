@@ -9,10 +9,10 @@ pub struct VarStatement {
 }
 
 impl Node for VarStatement {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_var_stmt(self)
+        visitor.visit_var_stmt::<T>(self)
     }
 }

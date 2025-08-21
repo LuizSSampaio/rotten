@@ -6,10 +6,10 @@ pub struct WhileStatement {
 }
 
 impl Node for WhileStatement {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_while_stmt(self)
+        visitor.visit_while_stmt::<T>(self)
     }
 }

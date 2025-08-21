@@ -9,10 +9,10 @@ pub struct GetExpression {
 }
 
 impl Node for GetExpression {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_get_expr(self)
+        visitor.visit_get_expr::<T>(self)
     }
 }

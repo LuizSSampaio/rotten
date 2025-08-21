@@ -5,10 +5,10 @@ pub struct BlockStatement {
 }
 
 impl Node for BlockStatement {
-    fn accept(&mut self, visitor: &mut impl Visitor) -> impl Visitor
+    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
     where
         Self: Sized,
     {
-        visitor.visit_block_stmt(self)
+        visitor.visit_block_stmt::<T>(self)
     }
 }

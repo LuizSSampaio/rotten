@@ -1,6 +1,7 @@
 pub mod block;
 pub mod class;
 pub mod expression;
+pub mod for_statement;
 pub mod function;
 pub mod if_statement;
 pub mod return_statement;

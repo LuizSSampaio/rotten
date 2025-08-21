@@ -1,12 +1,12 @@
-use crate::parser::node::expression::assign::AssignExpression;
+use crate::parser::node::expression::{assign::AssignExpression, binary::BinaryExpression};
 
 pub mod expression;
 pub mod statement;
 
 pub trait Visitor {
     fn visit_assign_expr(&mut self, expression: &mut AssignExpression) -> impl Visitor;
-    fn visit_binary_expr(&mut self) -> impl Visitor;
     fn visit_call_expr(&mut self) -> impl Visitor;
+    fn visit_binary_expr(&mut self, expression: &mut BinaryExpression) -> impl Visitor;
     fn visit_get_expr(&mut self) -> impl Visitor;
     fn visit_grouping_expr(&mut self) -> impl Visitor;
     fn visit_literal_expr(&mut self) -> impl Visitor;

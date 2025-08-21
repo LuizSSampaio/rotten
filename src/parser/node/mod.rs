@@ -22,7 +22,6 @@ pub trait Visitor {
     fn visit_expression_stmt(&mut self) -> impl Visitor;
     fn visit_function_stmt(&mut self) -> impl Visitor;
     fn visit_if_stmt(&mut self) -> impl Visitor;
-    fn visit_print_stmt(&mut self) -> impl Visitor;
     fn visit_return_stmt(&mut self) -> impl Visitor;
     fn visit_var_stmt(&mut self) -> impl Visitor;
     fn visit_while_stmt(&mut self) -> impl Visitor;

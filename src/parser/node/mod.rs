@@ -1,5 +1,5 @@
 use crate::parser::node::expression::{
-    assign::AssignExpression, binary::BinaryExpression, call::CallExpression,
+    assign::AssignExpression, binary::BinaryExpression, call::CallExpression, get::GetExpression,
 };
 
 pub mod expression;
@@ -9,7 +9,7 @@ pub trait Visitor {
     fn visit_assign_expr(&mut self, expression: &mut AssignExpression) -> impl Visitor;
     fn visit_binary_expr(&mut self, expression: &mut BinaryExpression) -> impl Visitor;
     fn visit_call_expr(&mut self, expression: &mut CallExpression) -> impl Visitor;
-    fn visit_get_expr(&mut self) -> impl Visitor;
+    fn visit_get_expr(&mut self, expression: &mut GetExpression) -> impl Visitor;
     fn visit_grouping_expr(&mut self) -> impl Visitor;
     fn visit_literal_expr(&mut self) -> impl Visitor;
     fn visit_logical_expr(&mut self) -> impl Visitor;

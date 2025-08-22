@@ -26,6 +26,14 @@ fn main() {
     }
 }
 
+fn run(source: String) -> anyhow::Result<()> {
+    let tokens = lexer::run(source)?;
+    let mut parser = parser::Parser::new(tokens);
+    let _expr = parser.parse()?;
+
+    Ok(())
+}
+
 fn run_file(path: PathBuf) {
     let display = path.display();
 
@@ -42,7 +50,7 @@ fn run_file(path: PathBuf) {
         Err(e) => panic!("Couldn't read {}: {}", display, e),
     }
 
-    if let Err(e) = lexer::run(content) {
+    if let Err(e) = run(content) {
         panic!("{}", e)
     }
 }
@@ -67,7 +75,7 @@ fn run_repl() {
             break;
         }
 
-        if let Err(e) = lexer::run(line) {
+        if let Err(e) = run(line) {
             println!("{}", e)
         }
     }

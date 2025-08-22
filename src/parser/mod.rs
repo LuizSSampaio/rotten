@@ -28,6 +28,10 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
+    pub fn parse(&mut self) -> Result<Box<dyn Node>> {
+        self.expression()
+    }
+
     fn match_tokens(&mut self, kinds: &[TokenType]) -> bool {
         for kind in kinds {
             if self.check(kind) {

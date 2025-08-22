@@ -86,6 +86,37 @@ impl Parser {
         }
     }
 
+    fn syncronize(&mut self) {
+        let _ = self.advance();
+
+        while !self.is_at_end() {
+            match self.previous() {
+                Ok(token) => {
+                    if token.kind == TokenType::Semicolon {
+                        return;
+                    }
+                }
+                Err(_) => continue,
+            }
+
+            let Ok(token) = self.peek() else { continue };
+            match token.kind {
+                TokenType::Class
+                | TokenType::Fun
+                | TokenType::Var
+                | TokenType::For
+                | TokenType::If
+                | TokenType::While
+                | TokenType::Return => {
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        let _ = self.advance();
+    }
+
     fn expression(&mut self) -> Result<Box<dyn Node>> {
         self.equality()
     }

@@ -6,7 +6,7 @@ use crate::lexer::emitter::Emitter;
 use crate::lexer::error::{LexerError, LexerErrorMessage};
 use crate::lexer::keywords;
 use crate::lexer::reader::Reader;
-use crate::lexer::token::{Token, TokenPosition, TokenType};
+use crate::lexer::token::{Token, TokenPosition, TokenType, TokenValue};
 
 pub(in crate::lexer) struct Scanner {
     reader: Reader,
@@ -31,6 +31,7 @@ impl Scanner {
 
         self.emitter.add_token(
             TokenType::EndOfFile,
+            None,
             String::new(),
             self.reader.row(),
             self.reader.column(),
@@ -41,42 +42,42 @@ impl Scanner {
 
     fn scan_token(&mut self) -> Result<()> {
         match self.reader.advance()? {
-            '(' => self.add_token(TokenType::LeftParen),
-            ')' => self.add_token(TokenType::RightParen),
-            '{' => self.add_token(TokenType::LeftBrace),
-            '}' => self.add_token(TokenType::RightBrace),
-            ',' => self.add_token(TokenType::Comma),
-            '.' => self.add_token(TokenType::Dot),
-            '-' => self.add_token(TokenType::Minus),
-            '+' => self.add_token(TokenType::Plus),
-            ';' => self.add_token(TokenType::Semicolon),
-            '*' => self.add_token(TokenType::Star),
+            '(' => self.add_token(TokenType::LeftParen, None),
+            ')' => self.add_token(TokenType::RightParen, None),
+            '{' => self.add_token(TokenType::LeftBrace, None),
+            '}' => self.add_token(TokenType::RightBrace, None),
+            ',' => self.add_token(TokenType::Comma, None),
+            '.' => self.add_token(TokenType::Dot, None),
+            '-' => self.add_token(TokenType::Minus, None),
+            '+' => self.add_token(TokenType::Plus, None),
+            ';' => self.add_token(TokenType::Semicolon, None),
+            '*' => self.add_token(TokenType::Star, None),
             '!' => {
                 if self.reader.next_is('=') {
-                    self.add_token(TokenType::BangEqual);
+                    self.add_token(TokenType::BangEqual, None);
                 } else {
-                    self.add_token(TokenType::Bang);
+                    self.add_token(TokenType::Bang, None);
                 }
             }
             '=' => {
                 if self.reader.next_is('=') {
-                    self.add_token(TokenType::EqualEqual);
+                    self.add_token(TokenType::EqualEqual, None);
                 } else {
-                    self.add_token(TokenType::Equal);
+                    self.add_token(TokenType::Equal, None);
                 }
             }
             '<' => {
                 if self.reader.next_is('=') {
-                    self.add_token(TokenType::LessEqual);
+                    self.add_token(TokenType::LessEqual, None);
                 } else {
-                    self.add_token(TokenType::Less);
+                    self.add_token(TokenType::Less, None);
                 }
             }
             '>' => {
                 if self.reader.next_is('=') {
-                    self.add_token(TokenType::GreaterEqual);
+                    self.add_token(TokenType::GreaterEqual, None);
                 } else {
-                    self.add_token(TokenType::Greater);
+                    self.add_token(TokenType::Greater, None);
                 }
             }
             '/' => {
@@ -96,7 +97,7 @@ impl Scanner {
                         self.reader.advance()?; // /
                     }
                 } else {
-                    self.add_token(TokenType::Slash);
+                    self.add_token(TokenType::Slash, None);
                 }
             }
             '"' => self.string()?,
@@ -146,7 +147,7 @@ impl Scanner {
 
         let lexeme = self.reader.current_lexeme();
         let value = lexeme[1..lexeme.len() - 1].to_string();
-        self.add_token(TokenType::String(value));
+        self.add_token(TokenType::String, Some(TokenValue::String(value)));
         Ok(())
     }
 
@@ -172,7 +173,7 @@ impl Scanner {
                 column: self.reader.column(),
             },
         })?;
-        self.add_token(TokenType::Number(value));
+        self.add_token(TokenType::Number, Some(TokenValue::Number(value)));
         Ok(())
     }
 
@@ -187,15 +188,15 @@ impl Scanner {
             .get(&*slice)
             .cloned()
             .unwrap_or(TokenType::Identifier);
-        self.add_token(token_type);
+        self.add_token(token_type, None);
         Ok(())
     }
 
-    fn add_token(&mut self, token_type: TokenType) {
+    fn add_token(&mut self, token_type: TokenType, token_value: Option<TokenValue>) {
         let lexeme = self.reader.current_lexeme();
         let column = self.reader.calculate_column(lexeme.len());
         self.emitter
-            .add_token(token_type, lexeme, self.reader.row(), column);
+            .add_token(token_type, token_value, lexeme, self.reader.row(), column);
     }
 }
 
@@ -208,9 +209,15 @@ mod tests {
         TokenPosition { row, column: col }
     }
 
-    fn token(kind: TokenType, lexeme: &str, pos: TokenPosition) -> Token {
+    fn token(
+        kind: TokenType,
+        value: Option<TokenValue>,
+        lexeme: &str,
+        pos: TokenPosition,
+    ) -> Token {
         Token {
             kind,
+            value,
             lexeme: lexeme.to_string(),
             position: pos,
         }
@@ -233,11 +240,21 @@ mod tests {
     fn simple_arithmetic() {
         let res = scan("1 + 2;").unwrap();
         let expected = vec![
-            token(TokenType::Number(1.0), "1", pos(1, 1)),
-            token(TokenType::Plus, "+", pos(1, 3)),
-            token(TokenType::Number(2.0), "2", pos(1, 5)),
-            token(TokenType::Semicolon, ";", pos(1, 6)),
-            token(TokenType::EndOfFile, "", pos(1, 7)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(1.0)),
+                "1",
+                pos(1, 1),
+            ),
+            token(TokenType::Plus, None, "+", pos(1, 3)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(2.0)),
+                "2",
+                pos(1, 5),
+            ),
+            token(TokenType::Semicolon, None, ";", pos(1, 6)),
+            token(TokenType::EndOfFile, None, "", pos(1, 7)),
         ];
         assert_eq!(res, expected);
     }
@@ -246,12 +263,17 @@ mod tests {
     fn keywords_and_identifiers() {
         let res = scan("var x = 5.42;").unwrap();
         let expected = vec![
-            token(TokenType::Var, "var", pos(1, 1)),
-            token(TokenType::Identifier, "x", pos(1, 5)),
-            token(TokenType::Equal, "=", pos(1, 7)),
-            token(TokenType::Number(5.42), "5.42", pos(1, 9)),
-            token(TokenType::Semicolon, ";", pos(1, 13)),
-            token(TokenType::EndOfFile, "", pos(1, 14)),
+            token(TokenType::Var, None, "var", pos(1, 1)),
+            token(TokenType::Identifier, None, "x", pos(1, 5)),
+            token(TokenType::Equal, None, "=", pos(1, 7)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(5.42)),
+                "5.42",
+                pos(1, 9),
+            ),
+            token(TokenType::Semicolon, None, ";", pos(1, 13)),
+            token(TokenType::EndOfFile, None, "", pos(1, 14)),
         ];
         assert_eq!(res, expected);
     }
@@ -261,11 +283,12 @@ mod tests {
         let res = scan("\"hello\"").unwrap();
         let expected = vec![
             token(
-                TokenType::String("hello".to_string()),
+                TokenType::String,
+                Some(TokenValue::String("hello".to_string())),
                 "\"hello\"",
                 pos(1, 1),
             ),
-            token(TokenType::EndOfFile, "", pos(1, 8)),
+            token(TokenType::EndOfFile, None, "", pos(1, 8)),
         ];
         assert_eq!(res, expected);
     }
@@ -274,12 +297,17 @@ mod tests {
     fn line_comment() {
         let res = scan("// comment\nvar y = 10;").unwrap();
         let expected = vec![
-            token(TokenType::Var, "var", pos(2, 1)),
-            token(TokenType::Identifier, "y", pos(2, 5)),
-            token(TokenType::Equal, "=", pos(2, 7)),
-            token(TokenType::Number(10.0), "10", pos(2, 9)),
-            token(TokenType::Semicolon, ";", pos(2, 11)),
-            token(TokenType::EndOfFile, "", pos(2, 12)),
+            token(TokenType::Var, None, "var", pos(2, 1)),
+            token(TokenType::Identifier, None, "y", pos(2, 5)),
+            token(TokenType::Equal, None, "=", pos(2, 7)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(10.0)),
+                "10",
+                pos(2, 9),
+            ),
+            token(TokenType::Semicolon, None, ";", pos(2, 11)),
+            token(TokenType::EndOfFile, None, "", pos(2, 12)),
         ];
         assert_eq!(res, expected);
     }
@@ -288,12 +316,17 @@ mod tests {
     fn block_comment() {
         let res = scan("/* comment */ var z = 1;").unwrap();
         let expected = vec![
-            token(TokenType::Var, "var", pos(1, 15)),
-            token(TokenType::Identifier, "z", pos(1, 19)),
-            token(TokenType::Equal, "=", pos(1, 21)),
-            token(TokenType::Number(1.0), "1", pos(1, 23)),
-            token(TokenType::Semicolon, ";", pos(1, 24)),
-            token(TokenType::EndOfFile, "", pos(1, 25)),
+            token(TokenType::Var, None, "var", pos(1, 15)),
+            token(TokenType::Identifier, None, "z", pos(1, 19)),
+            token(TokenType::Equal, None, "=", pos(1, 21)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(1.0)),
+                "1",
+                pos(1, 23),
+            ),
+            token(TokenType::Semicolon, None, ";", pos(1, 24)),
+            token(TokenType::EndOfFile, None, "", pos(1, 25)),
         ];
         assert_eq!(res, expected);
     }
@@ -302,12 +335,12 @@ mod tests {
     fn multi_char_operators() {
         let res = scan("a != b == c").unwrap();
         let expected = vec![
-            token(TokenType::Identifier, "a", pos(1, 1)),
-            token(TokenType::BangEqual, "!=", pos(1, 3)),
-            token(TokenType::Identifier, "b", pos(1, 6)),
-            token(TokenType::EqualEqual, "==", pos(1, 8)),
-            token(TokenType::Identifier, "c", pos(1, 11)),
-            token(TokenType::EndOfFile, "", pos(1, 12)),
+            token(TokenType::Identifier, None, "a", pos(1, 1)),
+            token(TokenType::BangEqual, None, "!=", pos(1, 3)),
+            token(TokenType::Identifier, None, "b", pos(1, 6)),
+            token(TokenType::EqualEqual, None, "==", pos(1, 8)),
+            token(TokenType::Identifier, None, "c", pos(1, 11)),
+            token(TokenType::EndOfFile, None, "", pos(1, 12)),
         ];
         assert_eq!(res, expected);
     }
@@ -316,10 +349,20 @@ mod tests {
     fn less_equal() {
         let res = scan("1 <= 2").unwrap();
         let expected = vec![
-            token(TokenType::Number(1.0), "1", pos(1, 1)),
-            token(TokenType::LessEqual, "<=", pos(1, 3)),
-            token(TokenType::Number(2.0), "2", pos(1, 6)),
-            token(TokenType::EndOfFile, "", pos(1, 7)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(1.0)),
+                "1",
+                pos(1, 1),
+            ),
+            token(TokenType::LessEqual, None, "<=", pos(1, 3)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(2.0)),
+                "2",
+                pos(1, 6),
+            ),
+            token(TokenType::EndOfFile, None, "", pos(1, 7)),
         ];
         assert_eq!(res, expected);
     }
@@ -328,10 +371,20 @@ mod tests {
     fn greater_equal() {
         let res = scan("1 >= 2").unwrap();
         let expected = vec![
-            token(TokenType::Number(1.0), "1", pos(1, 1)),
-            token(TokenType::GreaterEqual, ">=", pos(1, 3)),
-            token(TokenType::Number(2.0), "2", pos(1, 6)),
-            token(TokenType::EndOfFile, "", pos(1, 7)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(1.0)),
+                "1",
+                pos(1, 1),
+            ),
+            token(TokenType::GreaterEqual, None, ">=", pos(1, 3)),
+            token(
+                TokenType::Number,
+                Some(TokenValue::Number(2.0)),
+                "2",
+                pos(1, 6),
+            ),
+            token(TokenType::EndOfFile, None, "", pos(1, 7)),
         ];
         assert_eq!(res, expected);
     }
@@ -366,14 +419,14 @@ mod tests {
     #[test]
     fn empty_input() {
         let res = scan("").unwrap();
-        let expected = vec![token(TokenType::EndOfFile, "", pos(1, 1))];
+        let expected = vec![token(TokenType::EndOfFile, None, "", pos(1, 1))];
         assert_eq!(res, expected);
     }
 
     #[test]
     fn whitespace_only() {
         let res = scan(" \t\n ").unwrap();
-        let expected = vec![token(TokenType::EndOfFile, "", pos(2, 2))];
+        let expected = vec![token(TokenType::EndOfFile, None, "", pos(2, 2))];
         assert_eq!(res, expected);
     }
 
@@ -382,11 +435,12 @@ mod tests {
         let res = scan("\"line1\\nline2\"").unwrap();
         let expected = vec![
             token(
-                TokenType::String("line1\\nline2".to_string()),
+                TokenType::String,
+                Some(TokenValue::String("line1\\nline2".to_string())),
                 "\"line1\\nline2\"",
                 pos(1, 1),
             ),
-            token(TokenType::EndOfFile, "", pos(1, 15)),
+            token(TokenType::EndOfFile, None, "", pos(1, 15)),
         ];
         assert_eq!(res, expected);
     }
@@ -394,7 +448,7 @@ mod tests {
     #[test]
     fn unterminated_block_comment() {
         let res = scan("/* unterminated").unwrap();
-        let expected = vec![token(TokenType::EndOfFile, "", pos(1, 16))];
+        let expected = vec![token(TokenType::EndOfFile, None, "", pos(1, 16))];
         assert_eq!(res, expected);
     }
 

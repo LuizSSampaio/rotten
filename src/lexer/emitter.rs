@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenPosition, TokenType};
+use crate::lexer::token::{Token, TokenPosition, TokenType, TokenValue};
 
 pub struct Emitter {
     tokens: Vec<Token>,
@@ -13,9 +13,17 @@ impl Emitter {
         self.tokens.clone()
     }
 
-    pub fn add_token(&mut self, kind: TokenType, lexeme: String, row: usize, column: usize) {
+    pub fn add_token(
+        &mut self,
+        kind: TokenType,
+        value: Option<TokenValue>,
+        lexeme: String,
+        row: usize,
+        column: usize,
+    ) {
         self.tokens.push(Token {
             kind,
+            value,
             lexeme,
             position: TokenPosition { row, column },
         });

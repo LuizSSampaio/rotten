@@ -1,15 +1,10 @@
-use crate::parser::node::{Node, Visitor};
-
-#[derive(Clone, Debug)]
-pub enum Value {
-    Bool(bool),
-    Nil,
-    Number(f64),
-    String(String),
-}
+use crate::{
+    lexer::token::TokenValue,
+    parser::node::{Node, Visitor},
+};
 
 pub struct LiteralExpression {
-    pub value: Value,
+    pub value: TokenValue,
 }
 
 impl Node for LiteralExpression {

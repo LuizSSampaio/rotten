@@ -25,8 +25,8 @@ pub enum TokenType {
 
     // Literals.
     Identifier,
-    String(String),
-    Number(f64),
+    String,
+    Number,
 
     // Keywords.
     And,
@@ -49,8 +49,17 @@ pub enum TokenType {
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum TokenValue {
+    Bool(bool),
+    Number(f64),
+    String(String),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Token {
     pub kind: TokenType,
+    pub value: Option<TokenValue>,
     pub lexeme: String,
     pub position: TokenPosition,
 }

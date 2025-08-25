@@ -9,10 +9,10 @@ pub struct ReturnStatement {
 }
 
 impl Node for ReturnStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_return_stmt::<T>(self)
+        visitor.visit_return_stmt(self)
     }
 }

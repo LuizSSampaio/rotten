@@ -10,10 +10,10 @@ pub struct FunctionStatement {
 }
 
 impl Node for FunctionStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_function_stmt::<T>(self)
+        visitor.visit_function_stmt(self)
     }
 }

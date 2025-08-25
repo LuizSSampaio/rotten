@@ -9,10 +9,10 @@ pub struct SuperExpression {
 }
 
 impl Node for SuperExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_super_expr::<T>(self)
+        visitor.visit_super_expr(self)
     }
 }

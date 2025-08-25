@@ -10,10 +10,10 @@ pub struct LogicalExpression {
 }
 
 impl Node for LogicalExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_logical_expr::<T>(self)
+        visitor.visit_logical_expr(self)
     }
 }

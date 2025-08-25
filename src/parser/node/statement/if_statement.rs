@@ -7,10 +7,10 @@ pub struct IfStatement {
 }
 
 impl Node for IfStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_if_stmt::<T>(self)
+        visitor.visit_if_stmt(self)
     }
 }

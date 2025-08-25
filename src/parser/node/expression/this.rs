@@ -8,10 +8,10 @@ pub struct ThisExpression {
 }
 
 impl Node for ThisExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_this_expr::<T>(self)
+        visitor.visit_this_expr(self)
     }
 }

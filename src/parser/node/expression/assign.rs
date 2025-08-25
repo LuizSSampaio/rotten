@@ -9,10 +9,10 @@ pub struct AssignExpression {
 }
 
 impl Node for AssignExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor) -> T
+    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
     where
         Self: Sized,
     {
-        visitor.visit_assign_expr::<T>(self)
+        visitor.visit_assign_expr(self)
     }
 }

@@ -15,7 +15,7 @@ use crate::{
 };
 
 mod error;
-mod node;
+pub mod node;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Parser {

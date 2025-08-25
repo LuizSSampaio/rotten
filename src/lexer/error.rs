@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::lexer::token::TokenPosition;
+use crate::token::TokenPosition;
 
 #[derive(Debug, Clone)]
 pub enum LexerErrorMessage {

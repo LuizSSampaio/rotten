@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::lexer::token::TokenType;
+use crate::token::TokenType;
 
 pub fn create_keywords() -> HashMap<&'static str, TokenType> {
     let mut keywords = HashMap::new();

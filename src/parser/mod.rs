@@ -1,7 +1,6 @@
 use anyhow::Result;
 
 use crate::{
-    lexer::token::{Token, TokenType, TokenValue},
     parser::{
         error::{ParserError, ParserErrorMessage},
         node::{
@@ -12,6 +11,7 @@ use crate::{
             },
         },
     },
+    token::{Token, TokenType, TokenValue},
 };
 
 mod error;

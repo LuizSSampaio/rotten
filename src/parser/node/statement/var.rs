@@ -1,6 +1,6 @@
 use crate::{
-    lexer::token::Token,
     parser::node::{Node, Visitor},
+    token::Token,
 };
 
 pub struct VarStatement {

@@ -1,11 +1,10 @@
-use crate::lexer::{scanner::Scanner, token::Token};
+use crate::{lexer::scanner::Scanner, token::Token};
 
 mod emitter;
 mod error;
 mod keywords;
 mod reader;
 mod scanner;
-pub mod token;
 
 pub fn run(source: String) -> anyhow::Result<Vec<Token>> {
     let mut scanner = Scanner::new(source);

@@ -6,7 +6,7 @@ use crate::lexer::emitter::Emitter;
 use crate::lexer::error::{LexerError, LexerErrorMessage};
 use crate::lexer::keywords;
 use crate::lexer::reader::Reader;
-use crate::lexer::token::{Token, TokenPosition, TokenType, TokenValue};
+use crate::token::{Token, TokenPosition, TokenType, TokenValue};
 
 pub(in crate::lexer) struct Scanner {
     reader: Reader,
@@ -203,7 +203,6 @@ impl Scanner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lexer::token::{Token, TokenPosition, TokenType};
 
     fn pos(row: usize, col: usize) -> TokenPosition {
         TokenPosition { row, column: col }

@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::lexer::token::Token;
+use crate::token::Token;
 
 #[derive(Debug, Clone)]
 pub enum ParserErrorMessage {

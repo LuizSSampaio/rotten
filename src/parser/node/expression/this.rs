@@ -1,5 +1,5 @@
 use crate::{
-    lexer::token::Token,
+    token::Token,
     parser::node::{Node, Visitor},
 };
 

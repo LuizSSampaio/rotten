@@ -9,6 +9,7 @@ use log::error;
 
 mod lexer;
 mod parser;
+mod token;
 
 #[derive(Debug, Parser)]
 #[command(version, about = "A rotten language trash interpreter", long_about = None)]

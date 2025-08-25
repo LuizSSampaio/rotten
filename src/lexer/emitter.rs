@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenPosition, TokenType, TokenValue};
+use crate::token::{Token, TokenPosition, TokenType, TokenValue};
 
 pub struct Emitter {
     tokens: Vec<Token>,

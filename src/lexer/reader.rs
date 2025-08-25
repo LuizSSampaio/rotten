@@ -1,7 +1,9 @@
 use anyhow::Result;
 
-use crate::lexer::error::{LexerError, LexerErrorMessage};
-use crate::lexer::token::TokenPosition;
+use crate::{
+    lexer::error::{LexerError, LexerErrorMessage},
+    token::TokenPosition,
+};
 
 pub struct Reader {
     source: Vec<char>,

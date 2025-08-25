@@ -3,13 +3,7 @@ use anyhow::Result;
 use crate::{
     parser::{
         error::{ParserError, ParserErrorMessage},
-        node::{
-            Expression,
-            expression::{
-                binary::BinaryExpression, grouping::GroupingExpression, literal::LiteralExpression,
-                unary::UnaryExpression,
-            },
-        },
+        node::expression::Expression,
     },
     token::{Token, TokenType, TokenValue},
 };
@@ -132,11 +126,11 @@ impl Parser {
             let operator = self.previous()?;
             let right = self.comparison()?;
 
-            expr = Expression::Binary(BinaryExpression {
+            expr = Expression::Binary {
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
-            });
+            };
         }
 
         Ok(expr)
@@ -153,11 +147,11 @@ impl Parser {
         ]) {
             let operator = self.previous()?;
             let right = self.term()?;
-            expr = Expression::Binary(BinaryExpression {
+            expr = Expression::Binary {
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
-            });
+            };
         }
 
         Ok(expr)
@@ -169,11 +163,11 @@ impl Parser {
         while self.match_tokens(&[TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous()?;
             let right = self.factor()?;
-            expr = Expression::Binary(BinaryExpression {
+            expr = Expression::Binary {
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
-            });
+            };
         }
 
         Ok(expr)
@@ -185,11 +179,11 @@ impl Parser {
         while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
             let operator = self.previous()?;
             let right = self.unary()?;
-            expr = Expression::Binary(BinaryExpression {
+            expr = Expression::Binary {
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
-            });
+            };
         }
 
         Ok(expr)
@@ -199,7 +193,10 @@ impl Parser {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous()?;
             let right = self.unary()?;
-            return Ok(Expression::Unary(UnaryExpression { operator, right: Box::new(right) }));
+            return Ok(Expression::Unary {
+                operator,
+                right: Box::new(right),
+            });
         }
 
         self.primary()
@@ -207,19 +204,19 @@ impl Parser {
 
     fn primary(&mut self) -> Result<Expression> {
         if self.match_tokens(&[TokenType::False]) {
-            return Ok(Expression::Literal(LiteralExpression {
+            return Ok(Expression::Literal {
                 value: TokenValue::Bool(false),
-            }));
+            });
         }
         if self.match_tokens(&[TokenType::True]) {
-            return Ok(Expression::Literal(LiteralExpression {
+            return Ok(Expression::Literal {
                 value: TokenValue::Bool(true),
-            }));
+            });
         }
         if self.match_tokens(&[TokenType::Nil]) {
-            return Ok(Expression::Literal(LiteralExpression {
+            return Ok(Expression::Literal {
                 value: TokenValue::Nil,
-            }));
+            });
         }
 
         if self.match_tokens(&[TokenType::Number, TokenType::String]) {
@@ -234,7 +231,7 @@ impl Parser {
                     .into());
                 }
             };
-            return Ok(Expression::Literal(LiteralExpression { value }));
+            return Ok(Expression::Literal { value });
         }
 
         if self.match_tokens(&[TokenType::LeftParen]) {
@@ -248,7 +245,9 @@ impl Parser {
             }
 
             self.advance()?;
-            return Ok(Expression::Grouping(GroupingExpression { expression: Box::new(expr) }));
+            return Ok(Expression::Grouping {
+                expression: Box::new(expr),
+            });
         }
 
         Err(ParserError {

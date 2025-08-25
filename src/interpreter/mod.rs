@@ -12,8 +12,17 @@ mod error;
 pub struct Interpreter {}
 
 impl Interpreter {
-    fn evaluate(&mut self, expression: &mut Expression) -> Result<TokenValue> {
-        expression.accept::<Result<TokenValue>>(self)
+    fn evaluate(&mut self, expr: &mut Expression) -> Result<TokenValue> {
+        expr.accept::<Result<TokenValue>>(self)
+    }
+
+    fn is_truthy(&self, value: TokenValue) -> bool {
+        match value {
+            TokenValue::Bool(val) => val,
+            TokenValue::Number(val) => val != 0.0,
+            TokenValue::String(content) => !content.is_empty(),
+            TokenValue::Nil => false,
+        }
     }
 }
 
@@ -80,6 +89,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let right = self.evaluate(&mut expr.right)?;
 
         match expr.operator.kind {
+            TokenType::Bang => return Ok(TokenValue::Bool(!self.is_truthy(right))),
             TokenType::Minus => {
                 if let TokenValue::Number(num) = right {
                     return Ok(TokenValue::Number(-num));

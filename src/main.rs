@@ -7,6 +7,7 @@ use std::{
 use clap::Parser;
 use log::error;
 
+mod interpreter;
 mod lexer;
 mod parser;
 mod token;

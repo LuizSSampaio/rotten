@@ -14,7 +14,7 @@ use crate::parser::node::statement::{
 pub mod expression;
 pub mod statement;
 
-pub trait Visitor<T> {
+pub trait ExpressionVisitor<T> {
     fn visit_assign_expr(&mut self, expression: &mut AssignExpression) -> T;
     fn visit_binary_expr(&mut self, expression: &mut BinaryExpression) -> T;
     fn visit_call_expr(&mut self, expression: &mut CallExpression) -> T;
@@ -27,7 +27,9 @@ pub trait Visitor<T> {
     fn visit_this_expr(&mut self, expression: &mut ThisExpression) -> T;
     fn visit_unary_expr(&mut self, expression: &mut UnaryExpression) -> T;
     fn visit_variable_expr(&mut self, expression: &mut VariableExpression) -> T;
+}
 
+pub trait StatementVisitor<T> {
     fn visit_block_stmt(&mut self, statement: &mut BlockStatement) -> T;
     fn visit_class_stmt(&mut self, statement: &mut ClassStatement) -> T;
     fn visit_expression_stmt(&mut self, statement: &mut ExpressionStatement) -> T;
@@ -38,6 +40,9 @@ pub trait Visitor<T> {
     fn visit_while_stmt(&mut self, statement: &mut WhileStatement) -> T;
     fn visit_for_stmt(&mut self, statement: &mut ForStatement) -> T;
 }
+
+pub trait Visitor<T>: ExpressionVisitor<T> + StatementVisitor<T> {}
+impl<T, V> Visitor<T> for V where V: ExpressionVisitor<T> + StatementVisitor<T> {}
 
 pub trait Node {
     fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T

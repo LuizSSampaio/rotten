@@ -1,6 +1,6 @@
 use crate::{
-    token::Token,
     parser::node::{Node, Visitor},
+    token::Token,
 };
 
 pub struct UnaryExpression {

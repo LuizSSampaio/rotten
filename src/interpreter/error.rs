@@ -1,11 +1,12 @@
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::token::Token;
+use crate::token::{Token, TokenValue};
 
 #[derive(Debug, Clone)]
 pub enum InterpreterErrorMessage {
     Unreachable,
+    UnexpectedValue { is: TokenValue, expect: TokenValue },
 }
 
 #[derive(Debug, Clone)]
@@ -15,9 +16,12 @@ pub struct InterpreterError {
 }
 
 impl InterpreterError {
-    fn message_to_string(&self) -> &str {
-        match self.message {
-            InterpreterErrorMessage::Unreachable => "Unreachable",
+    fn message_to_string(&self) -> String {
+        match &self.message {
+            InterpreterErrorMessage::Unreachable => "Unreachable".to_string(),
+            InterpreterErrorMessage::UnexpectedValue { is, expect } => {
+                format!("Unexpected value\nis: {}\nexpect: {}", is, expect)
+            }
         }
     }
 }

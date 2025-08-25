@@ -1,7 +1,7 @@
 use crate::{
-    interpreter::error::InterpreterError,
+    interpreter::error::{InterpreterError, InterpreterErrorMessage},
     parser::node::{Expression, ExpressionVisitor, expression},
-    token::{TokenType, TokenValue},
+    token::{Token, TokenType, TokenValue},
 };
 
 use anyhow::Result;
@@ -24,6 +24,20 @@ impl Interpreter {
             TokenValue::Nil => false,
         }
     }
+
+    fn expect_number(&self, value: TokenValue, token: &Token) -> Result<f64> {
+        match value {
+            TokenValue::Number(n) => Ok(n),
+            other => Err(InterpreterError {
+                message: InterpreterErrorMessage::UnexpectedValue {
+                    is: other,
+                    expect: TokenValue::Number(0.0),
+                },
+                token: Some(token.clone()),
+            }
+            .into()),
+        }
+    }
 }
 
 impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
@@ -38,7 +52,30 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         &mut self,
         expr: &mut expression::binary::BinaryExpression,
     ) -> Result<TokenValue> {
-        todo!()
+        let left = self.evaluate(&mut expr.left)?;
+        let right = self.evaluate(&mut expr.right)?;
+
+        let left = self.expect_number(left, &expr.operator)?;
+        let right = self.expect_number(right, &expr.operator)?;
+
+        match expr.operator.kind {
+            TokenType::Minus => {
+                return Ok(TokenValue::Number(left - right));
+            }
+            TokenType::Slash => {
+                return Ok(TokenValue::Number(left / right));
+            }
+            TokenType::Star => {
+                return Ok(TokenValue::Number(left * right));
+            }
+            _ => {}
+        }
+
+        Err(InterpreterError {
+            message: InterpreterErrorMessage::Unreachable,
+            token: Some(expr.operator.to_owned()),
+        }
+        .into())
     }
 
     fn visit_call(&mut self, expr: &mut expression::call::CallExpression) -> Result<TokenValue> {
@@ -99,7 +136,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         }
 
         Err(InterpreterError {
-            message: error::InterpreterErrorMessage::Unreachable,
+            message: InterpreterErrorMessage::Unreachable,
             token: Some(expr.operator.to_owned()),
         }
         .into())

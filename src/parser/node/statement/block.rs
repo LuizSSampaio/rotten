@@ -1,11 +1,11 @@
-use crate::parser::node::{Node, Visitor};
+use crate::parser::node::{Statement, StatementVisitor};
 
 pub struct BlockStatement {
-    pub statements: Vec<Box<dyn Node>>,
+    pub statements: Vec<Box<dyn Statement>>,
 }
 
-impl Node for BlockStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for BlockStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

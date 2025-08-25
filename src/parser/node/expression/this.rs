@@ -1,14 +1,14 @@
 use crate::{
     token::Token,
-    parser::node::{Node, Visitor},
+    parser::node::{Expression, ExpressionVisitor},
 };
 
 pub struct ThisExpression {
     pub keyword: Token,
 }
 
-impl Node for ThisExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for ThisExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

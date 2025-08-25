@@ -1,12 +1,12 @@
-use crate::parser::node::{Node, Visitor};
+use crate::parser::node::{Statement, StatementVisitor};
 
 pub struct WhileStatement {
-    pub condition: Box<dyn Node>,
-    pub body: Box<dyn Node>,
+    pub condition: Box<dyn Statement>,
+    pub body: Box<dyn Statement>,
 }
 
-impl Node for WhileStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for WhileStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

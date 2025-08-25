@@ -41,11 +41,14 @@ pub trait StatementVisitor<T> {
     fn visit_for_stmt(&mut self, statement: &mut ForStatement) -> T;
 }
 
-pub trait Visitor<T>: ExpressionVisitor<T> + StatementVisitor<T> {}
-impl<T, V> Visitor<T> for V where V: ExpressionVisitor<T> + StatementVisitor<T> {}
+pub trait Expression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
+    where
+        Self: Sized;
+}
 
-pub trait Node {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+pub trait Statement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized;
 }

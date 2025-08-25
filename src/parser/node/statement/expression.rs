@@ -1,11 +1,11 @@
-use crate::parser::node::{Node, Visitor};
+use crate::parser::node::{Statement, StatementVisitor};
 
 pub struct ExpressionStatement {
-    pub expression: Box<dyn Node>,
+    pub expression: Box<dyn Statement>,
 }
 
-impl Node for ExpressionStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for ExpressionStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

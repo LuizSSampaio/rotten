@@ -1,15 +1,15 @@
 use crate::{
-    parser::node::{Node, Visitor},
+    parser::node::{Statement, StatementVisitor},
     token::Token,
 };
 
 pub struct VarStatement {
     pub name: Token,
-    pub initializer: Option<Box<dyn Node>>,
+    pub initializer: Option<Box<dyn Statement>>,
 }
 
-impl Node for VarStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for VarStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

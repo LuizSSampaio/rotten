@@ -1,15 +1,15 @@
 use crate::{
+    parser::node::{Expression, ExpressionVisitor},
     token::Token,
-    parser::node::{Node, Visitor},
 };
 
 pub struct AssignExpression {
     pub token: Token,
-    pub value: Box<dyn Node>,
+    pub value: Box<dyn Expression>,
 }
 
-impl Node for AssignExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for AssignExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

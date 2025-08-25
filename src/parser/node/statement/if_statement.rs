@@ -1,13 +1,13 @@
-use crate::parser::node::{Node, Visitor};
+use crate::parser::node::{Statement, StatementVisitor};
 
 pub struct IfStatement {
-    pub condition: Box<dyn Node>,
-    pub then_branch: Box<dyn Node>,
-    pub else_branch: Option<Box<dyn Node>>,
+    pub condition: Box<dyn Statement>,
+    pub then_branch: Box<dyn Statement>,
+    pub else_branch: Option<Box<dyn Statement>>,
 }
 
-impl Node for IfStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for IfStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

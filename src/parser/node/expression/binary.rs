@@ -1,16 +1,16 @@
 use crate::{
     token::Token,
-    parser::node::{Node, Visitor},
+    parser::node::{Expression, ExpressionVisitor},
 };
 
 pub struct BinaryExpression {
-    pub left: Box<dyn Node>,
+    pub left: Box<dyn Expression>,
     pub operator: Token,
-    pub right: Box<dyn Node>,
+    pub right: Box<dyn Expression>,
 }
 
-impl Node for BinaryExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for BinaryExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

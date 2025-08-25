@@ -1,16 +1,16 @@
 use crate::{
     token::Token,
-    parser::node::{Node, Visitor},
+    parser::node::{Expression, ExpressionVisitor},
 };
 
 pub struct CallExpression {
-    pub callee: Box<dyn Node>,
+    pub callee: Box<dyn Expression>,
     pub paren: Token,
-    pub arguments: Vec<Box<dyn Node>>,
+    pub arguments: Vec<Box<dyn Expression>>,
 }
 
-impl Node for CallExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for CallExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

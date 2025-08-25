@@ -1,16 +1,16 @@
 use crate::{
-    parser::node::{Node, Visitor},
+    parser::node::{Statement, StatementVisitor},
     token::Token,
 };
 
 pub struct ClassStatement {
     pub name: Token,
-    pub superclass: Option<Box<dyn Node>>,
-    pub methods: Vec<Box<dyn Node>>,
+    pub superclass: Option<Box<dyn Statement>>,
+    pub methods: Vec<Box<dyn Statement>>,
 }
 
-impl Node for ClassStatement {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Statement for ClassStatement {
+    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
     where
         Self: Sized,
     {

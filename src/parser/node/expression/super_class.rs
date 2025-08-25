@@ -1,6 +1,6 @@
 use crate::{
     token::Token,
-    parser::node::{Node, Visitor},
+    parser::node::{Expression, ExpressionVisitor},
 };
 
 pub struct SuperExpression {
@@ -8,8 +8,8 @@ pub struct SuperExpression {
     pub method: Token,
 }
 
-impl Node for SuperExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for SuperExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

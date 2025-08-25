@@ -4,7 +4,7 @@ use crate::{
     parser::{
         error::{ParserError, ParserErrorMessage},
         node::{
-            Node,
+            Expression,
             expression::{
                 binary::BinaryExpression, grouping::GroupingExpression, literal::LiteralExpression,
                 unary::UnaryExpression,
@@ -28,7 +28,7 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Box<dyn Node>> {
+    pub fn parse(&mut self) -> Result<Box<dyn Expression>> {
         self.expression()
     }
 
@@ -121,11 +121,11 @@ impl Parser {
         let _ = self.advance();
     }
 
-    fn expression(&mut self) -> Result<Box<dyn Node>> {
+    fn expression(&mut self) -> Result<Box<dyn Expression>> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Result<Box<dyn Node>> {
+    fn equality(&mut self) -> Result<Box<dyn Expression>> {
         let mut expr = self.comparison()?;
 
         while self.match_tokens(&[TokenType::BangEqual, TokenType::EqualEqual]) {
@@ -142,7 +142,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<Box<dyn Node>> {
+    fn comparison(&mut self) -> Result<Box<dyn Expression>> {
         let mut expr = self.term()?;
 
         while self.match_tokens(&[
@@ -163,7 +163,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn term(&mut self) -> Result<Box<dyn Node>> {
+    fn term(&mut self) -> Result<Box<dyn Expression>> {
         let mut expr = self.factor()?;
 
         while self.match_tokens(&[TokenType::Minus, TokenType::Plus]) {
@@ -179,7 +179,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn factor(&mut self) -> Result<Box<dyn Node>> {
+    fn factor(&mut self) -> Result<Box<dyn Expression>> {
         let mut expr = self.unary()?;
 
         while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
@@ -195,7 +195,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Box<dyn Node>> {
+    fn unary(&mut self) -> Result<Box<dyn Expression>> {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous()?;
             let right = self.unary()?;
@@ -205,7 +205,7 @@ impl Parser {
         self.primary()
     }
 
-    fn primary(&mut self) -> Result<Box<dyn Node>> {
+    fn primary(&mut self) -> Result<Box<dyn Expression>> {
         if self.match_tokens(&[TokenType::False]) {
             return Ok(Box::new(LiteralExpression {
                 value: TokenValue::Bool(false),

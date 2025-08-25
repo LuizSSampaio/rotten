@@ -1,16 +1,16 @@
 use crate::{
     token::Token,
-    parser::node::{Node, Visitor},
+    parser::node::{Expression, ExpressionVisitor},
 };
 
 pub struct SetExpression {
-    pub object: Box<dyn Node>,
+    pub object: Box<dyn Expression>,
     pub name: Token,
-    pub value: Box<dyn Node>,
+    pub value: Box<dyn Expression>,
 }
 
-impl Node for SetExpression {
-    fn accept<T>(&mut self, visitor: &mut impl Visitor<T>) -> T
+impl Expression for SetExpression {
+    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
     where
         Self: Sized,
     {

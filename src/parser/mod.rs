@@ -28,7 +28,7 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Box<dyn Expression>> {
+    pub fn parse(&mut self) -> Result<Expression> {
         self.expression()
     }
 
@@ -121,28 +121,28 @@ impl Parser {
         let _ = self.advance();
     }
 
-    fn expression(&mut self) -> Result<Box<dyn Expression>> {
+    fn expression(&mut self) -> Result<Expression> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Result<Box<dyn Expression>> {
+    fn equality(&mut self) -> Result<Expression> {
         let mut expr = self.comparison()?;
 
         while self.match_tokens(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous()?;
             let right = self.comparison()?;
 
-            expr = Box::new(BinaryExpression {
-                left: expr,
+            expr = Expression::Binary(BinaryExpression {
+                left: Box::new(expr),
                 operator,
-                right,
+                right: Box::new(right),
             });
         }
 
         Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<Box<dyn Expression>> {
+    fn comparison(&mut self) -> Result<Expression> {
         let mut expr = self.term()?;
 
         while self.match_tokens(&[
@@ -153,71 +153,71 @@ impl Parser {
         ]) {
             let operator = self.previous()?;
             let right = self.term()?;
-            expr = Box::new(BinaryExpression {
-                left: expr,
+            expr = Expression::Binary(BinaryExpression {
+                left: Box::new(expr),
                 operator,
-                right,
+                right: Box::new(right),
             });
         }
 
         Ok(expr)
     }
 
-    fn term(&mut self) -> Result<Box<dyn Expression>> {
+    fn term(&mut self) -> Result<Expression> {
         let mut expr = self.factor()?;
 
         while self.match_tokens(&[TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous()?;
             let right = self.factor()?;
-            expr = Box::new(BinaryExpression {
-                left: expr,
+            expr = Expression::Binary(BinaryExpression {
+                left: Box::new(expr),
                 operator,
-                right,
+                right: Box::new(right),
             });
         }
 
         Ok(expr)
     }
 
-    fn factor(&mut self) -> Result<Box<dyn Expression>> {
+    fn factor(&mut self) -> Result<Expression> {
         let mut expr = self.unary()?;
 
         while self.match_tokens(&[TokenType::Slash, TokenType::Star]) {
             let operator = self.previous()?;
             let right = self.unary()?;
-            expr = Box::new(BinaryExpression {
-                left: expr,
+            expr = Expression::Binary(BinaryExpression {
+                left: Box::new(expr),
                 operator,
-                right,
+                right: Box::new(right),
             });
         }
 
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Box<dyn Expression>> {
+    fn unary(&mut self) -> Result<Expression> {
         if self.match_tokens(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous()?;
             let right = self.unary()?;
-            return Ok(Box::new(UnaryExpression { operator, right }));
+            return Ok(Expression::Unary(UnaryExpression { operator, right: Box::new(right) }));
         }
 
         self.primary()
     }
 
-    fn primary(&mut self) -> Result<Box<dyn Expression>> {
+    fn primary(&mut self) -> Result<Expression> {
         if self.match_tokens(&[TokenType::False]) {
-            return Ok(Box::new(LiteralExpression {
+            return Ok(Expression::Literal(LiteralExpression {
                 value: TokenValue::Bool(false),
             }));
         }
         if self.match_tokens(&[TokenType::True]) {
-            return Ok(Box::new(LiteralExpression {
+            return Ok(Expression::Literal(LiteralExpression {
                 value: TokenValue::Bool(true),
             }));
         }
         if self.match_tokens(&[TokenType::Nil]) {
-            return Ok(Box::new(LiteralExpression {
+            return Ok(Expression::Literal(LiteralExpression {
                 value: TokenValue::Nil,
             }));
         }
@@ -234,7 +234,7 @@ impl Parser {
                     .into());
                 }
             };
-            return Ok(Box::new(LiteralExpression { value }));
+            return Ok(Expression::Literal(LiteralExpression { value }));
         }
 
         if self.match_tokens(&[TokenType::LeftParen]) {
@@ -248,7 +248,7 @@ impl Parser {
             }
 
             self.advance()?;
-            return Ok(Box::new(GroupingExpression { expression: expr }));
+            return Ok(Expression::Grouping(GroupingExpression { expression: Box::new(expr) }));
         }
 
         Err(ParserError {

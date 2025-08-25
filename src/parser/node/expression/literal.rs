@@ -1,17 +1,6 @@
-use crate::{
-    token::TokenValue,
-    parser::node::{Expression, ExpressionVisitor},
-};
+use crate::token::TokenValue;
 
+#[derive(Debug, Clone)]
 pub struct LiteralExpression {
     pub value: TokenValue,
-}
-
-impl Expression for LiteralExpression {
-    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
-    where
-        Self: Sized,
-    {
-        visitor.visit_literal_expr(self)
-    }
 }

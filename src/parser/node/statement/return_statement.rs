@@ -1,18 +1,10 @@
 use crate::{
-    parser::node::{Statement, StatementVisitor},
+    parser::node::Statement,
     token::Token,
 };
 
+#[derive(Debug, Clone)]
 pub struct ReturnStatement {
     pub keyword: Token,
-    pub value: Option<Box<dyn Statement>>,
-}
-
-impl Statement for ReturnStatement {
-    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
-    where
-        Self: Sized,
-    {
-        visitor.visit_return_stmt(self)
-    }
+    pub value: Option<Box<Statement>>,
 }

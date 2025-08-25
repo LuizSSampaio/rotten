@@ -1,19 +1,11 @@
 use crate::{
+    parser::node::Expression,
     token::Token,
-    parser::node::{Expression, ExpressionVisitor},
 };
 
+#[derive(Debug, Clone)]
 pub struct LogicalExpression {
-    pub left: Box<dyn Expression>,
+    pub left: Box<Expression>,
     pub operator: Token,
-    pub right: Box<dyn Expression>,
-}
-
-impl Expression for LogicalExpression {
-    fn accept<T>(&mut self, visitor: &mut impl ExpressionVisitor<T>) -> T
-    where
-        Self: Sized,
-    {
-        visitor.visit_logical_expr(self)
-    }
+    pub right: Box<Expression>,
 }

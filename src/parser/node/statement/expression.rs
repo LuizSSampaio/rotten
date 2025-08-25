@@ -1,14 +1,6 @@
-use crate::parser::node::{Statement, StatementVisitor};
+use crate::parser::node::Statement;
 
+#[derive(Debug, Clone)]
 pub struct ExpressionStatement {
-    pub expression: Box<dyn Statement>,
-}
-
-impl Statement for ExpressionStatement {
-    fn accept<T>(&mut self, visitor: &mut impl StatementVisitor<T>) -> T
-    where
-        Self: Sized,
-    {
-        visitor.visit_expression_stmt(self)
-    }
+    pub expression: Box<Statement>,
 }

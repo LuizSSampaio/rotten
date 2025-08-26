@@ -12,6 +12,13 @@ mod error;
 pub struct Interpreter {}
 
 impl Interpreter {
+    pub fn interpret(&mut self, expr: &mut Expression) -> Result<()> {
+        let value = self.evaluate(expr)?;
+        println!("{}", value);
+
+        Ok(())
+    }
+
     fn evaluate(&mut self, expr: &mut Expression) -> Result<TokenValue> {
         expr.accept::<Result<TokenValue>>(self)
     }

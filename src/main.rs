@@ -31,7 +31,9 @@ fn main() {
 fn run(source: String) -> anyhow::Result<()> {
     let tokens = lexer::run(source)?;
     let mut parser = parser::Parser::new(tokens);
-    let _expr = parser.parse()?;
+    let mut expr = parser.parse()?;
+    let mut interpreter = interpreter::Interpreter::default();
+    interpreter.interpret(&mut expr)?;
 
     Ok(())
 }

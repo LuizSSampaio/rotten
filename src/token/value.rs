@@ -10,11 +10,12 @@ pub enum TokenValue {
 
 impl Display for TokenValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let debug_str = format!("{:?}", self);
-        let variant_name = debug_str
-            .split_once('(')
-            .map(|(name, _)| name)
-            .unwrap_or(&debug_str);
-        write!(f, "{}", variant_name.to_lowercase())
+        let text = match self {
+            TokenValue::Bool(val) => val.to_string(),
+            TokenValue::Number(val) => val.to_string(),
+            TokenValue::String(val) => val.to_owned(),
+            TokenValue::Nil => String::from("nil"),
+        };
+        write!(f, "{}", text)
     }
 }

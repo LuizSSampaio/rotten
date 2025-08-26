@@ -20,9 +20,22 @@ impl InterpreterError {
         match &self.message {
             InterpreterErrorMessage::Unreachable => "Unreachable".to_string(),
             InterpreterErrorMessage::UnexpectedValue { is, expect } => {
-                format!("Unexpected value\nis: {}\nexpect: {}", is, expect)
+                format!(
+                    "Unexpected value\nis: {}\nexpect: {}",
+                    Self::format_token_value(is),
+                    Self::format_token_value(expect)
+                )
             }
         }
+    }
+
+    fn format_token_value(value: &TokenValue) -> String {
+        let debug_str = format!("{:?}", value);
+        let variant_name = debug_str
+            .split_once('(')
+            .map(|(name, _)| name)
+            .unwrap_or(&debug_str);
+        variant_name.to_lowercase()
     }
 }
 

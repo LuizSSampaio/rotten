@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenValue};
+use crate::token::{Token, value::TokenValue};
 
 #[derive(Debug, Clone)]
 pub enum Expression {
@@ -119,4 +119,3 @@ impl Expression {
         }
     }
 }
-

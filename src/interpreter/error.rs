@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::token::{Token, TokenValue};
+use crate::token::{Token, value::TokenValue};
 
 #[derive(Debug, Clone)]
 pub enum InterpreterErrorMessage {

@@ -5,7 +5,7 @@ use crate::{
         error::{ParserError, ParserErrorMessage},
         node::expression::Expression,
     },
-    token::{Token, TokenType, TokenValue},
+    token::{Token, TokenType, value::TokenValue},
 };
 
 mod error;

@@ -7,6 +7,7 @@ use crate::token::{Token, value::TokenValue};
 pub enum InterpreterErrorMessage {
     Unreachable,
     UnexpectedValue { is: TokenValue, expect: TokenValue },
+    DivisionByZero,
 }
 
 #[derive(Debug, Clone)]
@@ -26,6 +27,7 @@ impl InterpreterError {
                     Self::format_token_value(expect)
                 )
             }
+            InterpreterErrorMessage::DivisionByZero => "Attempt to divide by zero".to_string(),
         }
     }
 

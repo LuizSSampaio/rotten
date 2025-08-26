@@ -72,6 +72,13 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
                 return Ok(TokenValue::Number(left_num - right_num));
             }
             TokenType::Slash => {
+                if right_num == 0.0 {
+                    return Err(InterpreterError {
+                        message: InterpreterErrorMessage::DivisionByZero,
+                        token: Some(operator.to_owned()),
+                    }
+                    .into());
+                }
                 return Ok(TokenValue::Number(left_num / right_num));
             }
             TokenType::Star => {

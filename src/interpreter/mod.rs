@@ -66,6 +66,18 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
             TokenType::Star => {
                 return Ok(TokenValue::Number(left_num * right_num));
             }
+            TokenType::Greater => {
+                return Ok(TokenValue::Bool(left_num > right_num));
+            }
+            TokenType::GreaterEqual => {
+                return Ok(TokenValue::Bool(left_num >= right_num));
+            }
+            TokenType::Less => {
+                return Ok(TokenValue::Bool(left_num < right_num));
+            }
+            TokenType::LessEqual => {
+                return Ok(TokenValue::Bool(left_num <= right_num));
+            }
             _ => {}
         }
 

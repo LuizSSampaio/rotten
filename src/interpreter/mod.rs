@@ -16,27 +16,17 @@ impl Interpreter {
         expr.accept::<Result<TokenValue>>(self)
     }
 
-    fn is_truthy(&self, value: TokenValue) -> bool {
-        match value {
-            TokenValue::Bool(val) => val,
-            TokenValue::Number(val) => val != 0.0,
-            TokenValue::String(content) => !content.is_empty(),
-            TokenValue::Nil => false,
-        }
-    }
-
-    fn expect_number(&self, value: TokenValue, token: &Token) -> Result<f64> {
-        match value {
-            TokenValue::Number(n) => Ok(n),
-            other => Err(InterpreterError {
+    fn as_number(&self, value: TokenValue, token: &Token) -> Result<f64> {
+        value.clone().try_into().map_err(|_| {
+            InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
-                    is: other,
+                    is: value,
                     expect: TokenValue::Number(0.0),
                 },
                 token: Some(token.clone()),
             }
-            .into()),
-        }
+            .into()
+        })
     }
 }
 
@@ -54,8 +44,8 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let left_val = self.evaluate(left)?;
         let right_val = self.evaluate(right)?;
 
-        let left_num = self.expect_number(left_val, operator)?;
-        let right_num = self.expect_number(right_val, operator)?;
+        let left_num = self.as_number(left_val, operator)?;
+        let right_num = self.as_number(right_val, operator)?;
 
         match operator.kind {
             TokenType::Minus => {
@@ -128,7 +118,10 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let right_val = self.evaluate(right)?;
 
         match operator.kind {
-            TokenType::Bang => return Ok(TokenValue::Bool(!self.is_truthy(right_val))),
+            TokenType::Bang => {
+                let val: bool = right_val.into();
+                return Ok(TokenValue::Bool(!val));
+            }
             TokenType::Minus => {
                 if let TokenValue::Number(num) = right_val {
                     return Ok(TokenValue::Number(-num));

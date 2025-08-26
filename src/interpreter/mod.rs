@@ -162,9 +162,8 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
                 return Ok(TokenValue::Bool(!val));
             }
             TokenType::Minus => {
-                if let TokenValue::Number(num) = right_val {
-                    return Ok(TokenValue::Number(-num));
-                }
+                let num = self.as_number(right_val, operator)?;
+                return Ok(TokenValue::Number(-num));
             }
             _ => {}
         }

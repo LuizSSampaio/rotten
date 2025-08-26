@@ -44,10 +44,19 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let left_val = self.evaluate(left)?;
         let right_val = self.evaluate(right)?;
 
+        if operator.kind == TokenType::Plus
+            && let (TokenValue::String(_), _) | (_, TokenValue::String(_)) = (&left_val, &right_val)
+        {
+            return Ok(TokenValue::String(format!("{}{}", left_val, right_val)));
+        }
+
         let left_num = self.as_number(left_val, operator)?;
         let right_num = self.as_number(right_val, operator)?;
 
         match operator.kind {
+            TokenType::Plus => {
+                return Ok(TokenValue::Number(left_num + right_num));
+            }
             TokenType::Minus => {
                 return Ok(TokenValue::Number(left_num - right_num));
             }

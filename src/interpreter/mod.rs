@@ -1,7 +1,7 @@
 use crate::{
     interpreter::error::{InterpreterError, InterpreterErrorMessage},
     parser::node::{Expression, ExpressionVisitor},
-    token::{Token, TokenType, value::TokenValue},
+    token::{Token, kind::TokenType, value::TokenValue},
 };
 
 use anyhow::Result;

@@ -6,7 +6,7 @@ use crate::lexer::emitter::Emitter;
 use crate::lexer::error::{LexerError, LexerErrorMessage};
 use crate::lexer::keywords;
 use crate::lexer::reader::Reader;
-use crate::token::{Token, TokenPosition, TokenType, value::TokenValue};
+use crate::token::{Token, TokenPosition, kind::TokenType, value::TokenValue};
 
 pub(in crate::lexer) struct Scanner {
     reader: Reader,

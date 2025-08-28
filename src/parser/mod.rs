@@ -5,7 +5,7 @@ use crate::{
         error::{ParserError, ParserErrorMessage},
         node::expression::Expression,
     },
-    token::{Token, TokenType, value::TokenValue},
+    token::{Token, kind::TokenType, value::TokenValue},
 };
 
 mod error;
@@ -115,10 +115,10 @@ impl Parser {
         let _ = self.advance();
     }
 
-    fn consume(&mut self, kind: TokenType, message: ParserErrorMessage) -> Result<()> {
+    fn consume(&mut self, kind: TokenType) -> Result<()> {
         if !self.check(&kind) {
             return Err(ParserError {
-                message,
+                message: ParserErrorMessage::ExpectToken(kind),
                 token: Some(self.peek()?),
             }
             .into());
@@ -248,10 +248,7 @@ impl Parser {
 
         if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            self.consume(
-                TokenType::RightParen,
-                ParserErrorMessage::ExpectRightParenthesis,
-            );
+            self.consume(TokenType::RightParen);
 
             self.advance()?;
             return Ok(Expression::Grouping {

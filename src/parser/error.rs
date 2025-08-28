@@ -1,14 +1,14 @@
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::token::Token;
+use crate::token::{Token, kind::TokenType};
 
 #[derive(Debug, Clone)]
 pub enum ParserErrorMessage {
     GetTokenError,
     LiteralTokenWithoutValue,
     UnexpectedTokenType,
-    ExpectRightParenthesis,
+    ExpectToken(TokenType),
 }
 
 #[derive(Debug, Clone)]
@@ -18,12 +18,14 @@ pub struct ParserError {
 }
 
 impl ParserError {
-    fn message_to_string(&self) -> &str {
-        match self.message {
-            ParserErrorMessage::GetTokenError => "Failed to get token",
-            ParserErrorMessage::LiteralTokenWithoutValue => "Literal type token without value",
-            ParserErrorMessage::UnexpectedTokenType => "Unexpected token type",
-            ParserErrorMessage::ExpectRightParenthesis => "'}' expected",
+    fn message_to_string(&self) -> String {
+        match &self.message {
+            ParserErrorMessage::GetTokenError => "Failed to get token".to_string(),
+            ParserErrorMessage::LiteralTokenWithoutValue => {
+                "Literal type token without value".to_string()
+            }
+            ParserErrorMessage::UnexpectedTokenType => "Unexpected token type".to_string(),
+            ParserErrorMessage::ExpectToken(kind) => format!("'{}' expected", kind),
         }
     }
 }

@@ -115,6 +115,18 @@ impl Parser {
         let _ = self.advance();
     }
 
+    fn consume(&mut self, kind: TokenType, message: ParserErrorMessage) -> Result<()> {
+        if !self.check(&kind) {
+            return Err(ParserError {
+                message,
+                token: Some(self.peek()?),
+            }
+            .into());
+        }
+
+        Ok(())
+    }
+
     fn expression(&mut self) -> Result<Expression> {
         self.equality()
     }
@@ -236,13 +248,10 @@ impl Parser {
 
         if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            if !self.check(&TokenType::RightParen) {
-                return Err(ParserError {
-                    message: ParserErrorMessage::ExpectRightParenthesis,
-                    token: Some(self.peek()?),
-                }
-                .into());
-            }
+            self.consume(
+                TokenType::RightParen,
+                ParserErrorMessage::ExpectRightParenthesis,
+            );
 
             self.advance()?;
             return Ok(Expression::Grouping {

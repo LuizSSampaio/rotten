@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::{
     parser::{
         error::{ParserError, ParserErrorMessage},
-        node::expression::Expression,
+        node::{expression::Expression, statement::Statement},
     },
     token::{Token, kind::TokenType, value::TokenValue},
 };
@@ -22,8 +22,14 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Expression> {
-        self.expression()
+    pub fn parse(&mut self) -> Result<Vec<Statement>> {
+        let mut statements = Vec::new();
+
+        while !self.is_at_end() {
+            statements.push(self.statement()?);
+        }
+
+        Ok(statements)
     }
 
     fn match_tokens(&mut self, kinds: &[TokenType]) -> bool {
@@ -261,5 +267,18 @@ impl Parser {
             token: Some(self.peek()?),
         }
         .into())
+    }
+
+    fn statement(&mut self) -> Result<Statement> {
+        self.expression_statement()
+    }
+
+    fn expression_statement(&mut self) -> Result<Statement> {
+        let expr = self.expression()?;
+        self.consume(TokenType::Semicolon)?;
+
+        Ok(Statement::Expression {
+            expression: Box::new(expr),
+        })
     }
 }

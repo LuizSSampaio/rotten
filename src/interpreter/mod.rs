@@ -1,6 +1,9 @@
 use crate::{
     interpreter::error::{InterpreterError, InterpreterErrorMessage},
-    parser::node::{Expression, ExpressionVisitor},
+    parser::node::{
+        Expression, ExpressionVisitor,
+        statement::{Statement, StatementVisitor},
+    },
     token::{Token, kind::TokenType, value::TokenValue},
 };
 
@@ -12,10 +15,10 @@ mod error;
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(&mut self, expr: &mut Expression) -> Result<()> {
-        let value = self.evaluate(expr)?;
-        println!("{}", value);
-
+    pub fn interpret(&mut self, statements: &mut Vec<Statement>) -> Result<()> {
+        for statement in statements {
+            statement.accept(self)?;
+        }
         Ok(())
     }
 
@@ -183,6 +186,66 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_variable(&mut self, name: &Token) -> Result<TokenValue> {
+        todo!()
+    }
+}
+
+impl StatementVisitor<Result<()>> for Interpreter {
+    fn visit_block(&mut self, statements: &mut [Statement]) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_class(
+        &mut self,
+        name: &Token,
+        superclass: &mut Option<Box<Expression>>,
+        methods: &mut [Statement],
+    ) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_expression(&mut self, expression: &mut Expression) -> Result<()> {
+        self.evaluate(expression)?;
+        Ok(())
+    }
+
+    fn visit_function(
+        &mut self,
+        name: &Token,
+        params: &[Token],
+        body: &mut [Statement],
+    ) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_if(
+        &mut self,
+        condition: &mut Expression,
+        then_branch: &mut Statement,
+        else_branch: &mut Option<Box<Statement>>,
+    ) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_return(&mut self, keyword: &Token, value: &mut Option<Box<Expression>>) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_var(&mut self, name: &Token, initializer: &mut Option<Box<Expression>>) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_while(&mut self, condition: &mut Expression, body: &mut Statement) -> Result<()> {
+        todo!()
+    }
+
+    fn visit_for(
+        &mut self,
+        initializer: &mut Option<Box<Statement>>,
+        condition: &mut Option<Box<Expression>>,
+        increment: &mut Option<Box<Expression>>,
+        body: &mut Statement,
+    ) -> Result<()> {
         todo!()
     }
 }

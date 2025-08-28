@@ -124,6 +124,7 @@ impl Parser {
             .into());
         }
 
+        self.advance()?;
         Ok(())
     }
 
@@ -257,7 +258,7 @@ impl Parser {
 
         Err(ParserError {
             message: ParserErrorMessage::UnexpectedTokenType,
-            token: Some(self.previous()?),
+            token: Some(self.peek()?),
         }
         .into())
     }

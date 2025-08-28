@@ -15,11 +15,14 @@ mod error;
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(&mut self, statements: &mut Vec<Statement>) -> Result<()> {
+    pub fn interpret(&mut self, statements: &mut Vec<Statement>) -> Result<Option<TokenValue>> {
+        let mut last_value = None;
+
         for statement in statements {
-            statement.accept(self)?;
+            last_value = statement.accept(self)?;
         }
-        Ok(())
+
+        Ok(last_value)
     }
 
     fn evaluate(&mut self, expr: &mut Expression) -> Result<TokenValue> {
@@ -190,8 +193,8 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 }
 
-impl StatementVisitor<Result<()>> for Interpreter {
-    fn visit_block(&mut self, statements: &mut [Statement]) -> Result<()> {
+impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
+    fn visit_block(&mut self, statements: &mut [Statement]) -> Result<Option<TokenValue>> {
         todo!()
     }
 
@@ -200,13 +203,12 @@ impl StatementVisitor<Result<()>> for Interpreter {
         name: &Token,
         superclass: &mut Option<Box<Expression>>,
         methods: &mut [Statement],
-    ) -> Result<()> {
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
-    fn visit_expression(&mut self, expression: &mut Expression) -> Result<()> {
-        self.evaluate(expression)?;
-        Ok(())
+    fn visit_expression(&mut self, expression: &mut Expression) -> Result<Option<TokenValue>> {
+        Ok(Some(self.evaluate(expression)?))
     }
 
     fn visit_function(
@@ -214,7 +216,7 @@ impl StatementVisitor<Result<()>> for Interpreter {
         name: &Token,
         params: &[Token],
         body: &mut [Statement],
-    ) -> Result<()> {
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
@@ -223,19 +225,31 @@ impl StatementVisitor<Result<()>> for Interpreter {
         condition: &mut Expression,
         then_branch: &mut Statement,
         else_branch: &mut Option<Box<Statement>>,
-    ) -> Result<()> {
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
-    fn visit_return(&mut self, keyword: &Token, value: &mut Option<Box<Expression>>) -> Result<()> {
+    fn visit_return(
+        &mut self,
+        keyword: &Token,
+        value: &mut Option<Box<Expression>>,
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
-    fn visit_var(&mut self, name: &Token, initializer: &mut Option<Box<Expression>>) -> Result<()> {
+    fn visit_var(
+        &mut self,
+        name: &Token,
+        initializer: &mut Option<Box<Expression>>,
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
-    fn visit_while(&mut self, condition: &mut Expression, body: &mut Statement) -> Result<()> {
+    fn visit_while(
+        &mut self,
+        condition: &mut Expression,
+        body: &mut Statement,
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 
@@ -245,7 +259,7 @@ impl StatementVisitor<Result<()>> for Interpreter {
         condition: &mut Option<Box<Expression>>,
         increment: &mut Option<Box<Expression>>,
         body: &mut Statement,
-    ) -> Result<()> {
+    ) -> Result<Option<TokenValue>> {
         todo!()
     }
 }

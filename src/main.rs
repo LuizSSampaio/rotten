@@ -7,6 +7,8 @@ use std::{
 use clap::Parser;
 use log::error;
 
+use crate::token::value::TokenValue;
+
 mod interpreter;
 mod lexer;
 mod parser;
@@ -28,14 +30,12 @@ fn main() {
     }
 }
 
-fn run(source: String) -> anyhow::Result<()> {
+fn run(source: String) -> anyhow::Result<Option<TokenValue>> {
     let tokens = lexer::run(source)?;
     let mut parser = parser::Parser::new(tokens);
     let mut stmts = parser.parse()?;
     let mut interpreter = interpreter::Interpreter::default();
-    interpreter.interpret(&mut stmts)?;
-
-    Ok(())
+    interpreter.interpret(&mut stmts)
 }
 
 fn run_file(path: PathBuf) {
@@ -79,8 +79,10 @@ fn run_repl() {
             break;
         }
 
-        if let Err(e) = run(line) {
-            println!("{}", e)
+        match run(line) {
+            Ok(Some(val)) => println!("-> {}", val),
+            Err(e) => println!("{}", e),
+            _ => {}
         }
     }
 }

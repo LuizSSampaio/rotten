@@ -31,7 +31,7 @@ impl Display for LexerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[{}:{}] Error: {}\n{}",
+            "[{}:{}] Lexer Error: {}\n{}",
             self.position.row,
             self.position.column,
             self.message_to_string(),

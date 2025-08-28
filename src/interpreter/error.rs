@@ -47,14 +47,14 @@ impl Display for InterpreterError {
             Some(token) => {
                 write!(
                     f,
-                    "[{}:{}] Error: {}\n{}",
+                    "[{}:{}] Interpreter Error: {}\n{}",
                     token.position.row,
                     token.position.column,
                     self.message_to_string(),
                     token.lexeme
                 )
             }
-            _ => write!(f, "Error: {}", self.message_to_string()),
+            _ => write!(f, "Interpreter Error: {}", self.message_to_string()),
         }
     }
 }

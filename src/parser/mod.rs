@@ -248,9 +248,8 @@ impl Parser {
 
         if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            self.consume(TokenType::RightParen);
+            self.consume(TokenType::RightParen)?;
 
-            self.advance()?;
             return Ok(Expression::Grouping {
                 expression: Box::new(expr),
             });

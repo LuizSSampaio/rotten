@@ -9,10 +9,18 @@ use crate::{
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Environment {
+    enclosing: Option<Box<Environment>>,
     values: HashMap<String, TokenValue>,
 }
 
 impl Environment {
+    pub fn new(enclosing: Box<Environment>) -> Self {
+        Self {
+            enclosing: Some(enclosing),
+            values: HashMap::default(),
+        }
+    }
+
     pub fn define(&mut self, name: String, value: TokenValue) {
         self.values.insert(name, value);
     }
@@ -20,13 +28,19 @@ impl Environment {
     pub fn get(&mut self, name: Token) -> Result<TokenValue> {
         match self.values.get(&name.lexeme) {
             Some(val) => Ok(val.to_owned()),
-            None => Err(InterpreterError {
-                message: InterpreterErrorMessage::UndefinedVariable {
-                    lexeme: name.lexeme.to_owned(),
-                },
-                token: Some(name),
+            None => {
+                if let Some(mut enclosing) = self.enclosing.to_owned() {
+                    return enclosing.get(name);
+                }
+
+                Err(InterpreterError {
+                    message: InterpreterErrorMessage::UndefinedVariable {
+                        lexeme: name.lexeme.to_owned(),
+                    },
+                    token: Some(name),
+                }
+                .into())
             }
-            .into()),
         }
     }
 
@@ -36,13 +50,20 @@ impl Environment {
                 self.values.insert(name.lexeme, value);
                 Ok(())
             }
-            false => Err(InterpreterError {
-                message: InterpreterErrorMessage::UndefinedVariable {
-                    lexeme: name.lexeme.to_owned(),
-                },
-                token: Some(name),
+            false => {
+                if let Some(mut enclosing) = self.enclosing.to_owned() {
+                    return enclosing.assign(name, value);
+                }
+
+                Err(InterpreterError {
+                    message: InterpreterErrorMessage::UndefinedVariable {
+                        lexeme: name.lexeme.to_owned(),
+                    },
+                    token: Some(name),
+                }
+                .into())
             }
-            .into()),
         }
     }
 }
+

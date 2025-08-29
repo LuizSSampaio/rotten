@@ -48,7 +48,9 @@ impl Interpreter {
 
 impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     fn visit_assign(&mut self, name: &Token, value: &mut Expression) -> Result<TokenValue> {
-        todo!()
+        let value = self.evaluate(value)?;
+        self.environment.assign(name.to_owned(), value.to_owned())?;
+        Ok(value)
     }
 
     fn visit_binary(

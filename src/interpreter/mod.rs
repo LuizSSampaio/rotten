@@ -12,8 +12,10 @@ use anyhow::Result;
 mod environment;
 mod error;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Interpreter {}
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct Interpreter {
+    environment: environment::Environment,
+}
 
 impl Interpreter {
     pub fn interpret(&mut self, statements: &mut Vec<Statement>) -> Result<Option<TokenValue>> {

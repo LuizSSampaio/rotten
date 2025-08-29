@@ -7,7 +7,7 @@ use std::{
 use clap::Parser;
 use log::error;
 
-use crate::token::value::TokenValue;
+use crate::{interpreter::Interpreter, token::value::TokenValue};
 
 mod interpreter;
 mod lexer;
@@ -30,11 +30,10 @@ fn main() {
     }
 }
 
-fn run(source: String) -> anyhow::Result<Option<TokenValue>> {
+fn run(interpreter: &mut Interpreter, source: String) -> anyhow::Result<Option<TokenValue>> {
     let tokens = lexer::run(source)?;
     let mut parser = parser::Parser::new(tokens);
     let mut stmts = parser.parse();
-    let mut interpreter = interpreter::Interpreter::default();
     interpreter.interpret(&mut stmts)
 }
 
@@ -54,7 +53,8 @@ fn run_file(path: PathBuf) {
         Err(e) => panic!("Couldn't read {}: {}", display, e),
     }
 
-    if let Err(e) = run(content) {
+    let mut interpreter = interpreter::Interpreter::default();
+    if let Err(e) = run(&mut interpreter, content) {
         panic!("{}", e)
     }
 }
@@ -62,6 +62,7 @@ fn run_file(path: PathBuf) {
 fn run_repl() {
     println!("Welcome to rotten v{}", env!("CARGO_PKG_VERSION"));
 
+    let mut interpreter = interpreter::Interpreter::default();
     loop {
         print!("> ");
         io::stdout().flush().expect("Couldn't flush stdout");
@@ -79,7 +80,7 @@ fn run_repl() {
             break;
         }
 
-        match run(line) {
+        match run(&mut interpreter, line) {
             Ok(Some(val)) => println!("-> {}", val),
             Err(e) => println!("{}", e),
             _ => {}

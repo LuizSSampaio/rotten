@@ -9,6 +9,7 @@ pub enum ParserErrorMessage {
     LiteralTokenWithoutValue,
     UnexpectedTokenType,
     ExpectToken(TokenType),
+    InvalidAssignment,
 }
 
 #[derive(Debug, Clone)]
@@ -26,6 +27,7 @@ impl ParserError {
             }
             ParserErrorMessage::UnexpectedTokenType => "Unexpected token type".to_string(),
             ParserErrorMessage::ExpectToken(kind) => format!("'{}' expected", kind),
+            ParserErrorMessage::InvalidAssignment => "Invalid assignment target".to_string(),
         }
     }
 }

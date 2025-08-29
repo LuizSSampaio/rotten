@@ -331,7 +331,22 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::LeftBrace]) {
+            return self.block_statement();
+        }
+
         self.expression_statement()
+    }
+
+    fn block_statement(&mut self) -> Result<Statement> {
+        let mut statements = Vec::new();
+
+        while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
+            statements.push(self.declaration()?);
+        }
+
+        self.consume(TokenType::RightBrace)?;
+        Ok(Statement::Block { statements })
     }
 
     fn expression_statement(&mut self) -> Result<Statement> {

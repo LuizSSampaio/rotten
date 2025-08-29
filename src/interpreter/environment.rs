@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
+
 use crate::{
     interpreter::error::{InterpreterError, InterpreterErrorMessage},
     token::{Token, value::TokenValue},
@@ -15,7 +17,7 @@ impl Environment {
         self.values.insert(name, value);
     }
 
-    pub fn get(&mut self, name: Token) -> anyhow::Result<TokenValue> {
+    pub fn get(&mut self, name: Token) -> Result<TokenValue> {
         match self.values.get(&name.lexeme) {
             Some(val) => Ok(val.to_owned()),
             None => Err(InterpreterError {
@@ -27,5 +29,20 @@ impl Environment {
             .into()),
         }
     }
-}
 
+    pub fn assign(&mut self, name: Token, value: TokenValue) -> Result<()> {
+        match self.values.contains_key(&name.lexeme) {
+            true => {
+                self.values.insert(name.lexeme, value);
+                Ok(())
+            }
+            false => Err(InterpreterError {
+                message: InterpreterErrorMessage::UndefinedVariable {
+                    lexeme: name.lexeme.to_owned(),
+                },
+                token: Some(name),
+            }
+            .into()),
+        }
+    }
+}

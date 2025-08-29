@@ -9,6 +9,7 @@ use crate::{
 
 use anyhow::Result;
 
+mod environment;
 mod error;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

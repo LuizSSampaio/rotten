@@ -8,6 +8,7 @@ pub enum InterpreterErrorMessage {
     Unreachable,
     UnexpectedValue { is: TokenValue, expect: TokenValue },
     DivisionByZero,
+    UndefinedVariable { lexeme: String },
 }
 
 #[derive(Debug, Clone)]
@@ -28,6 +29,9 @@ impl InterpreterError {
                 )
             }
             InterpreterErrorMessage::DivisionByZero => "Attempt to divide by zero".to_string(),
+            InterpreterErrorMessage::UndefinedVariable { lexeme } => {
+                format!("Undefined variable '{}'", lexeme)
+            }
         }
     }
 

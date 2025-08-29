@@ -1,5 +1,8 @@
 use crate::{
-    interpreter::error::{InterpreterError, InterpreterErrorMessage},
+    interpreter::{
+        environment::Environment,
+        error::{InterpreterError, InterpreterErrorMessage},
+    },
     parser::node::{
         Expression, ExpressionVisitor,
         statement::{Statement, StatementVisitor},
@@ -14,7 +17,7 @@ mod error;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Interpreter {
-    environment: environment::Environment,
+    environment: Box<Environment>,
 }
 
 impl Interpreter {
@@ -200,7 +203,15 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
 impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
     fn visit_block(&mut self, statements: &mut [Statement]) -> Result<Option<TokenValue>> {
-        todo!()
+        let previous = self.environment.to_owned();
+
+        self.environment = Box::new(Environment::new(previous.to_owned()));
+        for stmt in statements {
+            stmt.accept(self)?;
+        }
+
+        self.environment = previous;
+        Ok(None)
     }
 
     fn visit_class(

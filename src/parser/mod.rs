@@ -22,14 +22,23 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Statement>> {
+    pub fn parse(&mut self) -> Vec<Statement> {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            statements.push(self.statement()?);
+            let statement = match self.declaration() {
+                Ok(stmt) => stmt,
+                Err(e) => {
+                    println!("{}", e);
+                    log::error!("{}", e);
+                    self.syncronize();
+                    continue;
+                }
+            };
+            statements.push(statement);
         }
 
-        Ok(statements)
+        statements
     }
 
     fn match_tokens(&mut self, kinds: &[TokenType]) -> bool {
@@ -121,7 +130,7 @@ impl Parser {
         let _ = self.advance();
     }
 
-    fn consume(&mut self, kind: TokenType) -> Result<()> {
+    fn consume(&mut self, kind: TokenType) -> Result<Token> {
         if !self.check(&kind) {
             return Err(ParserError {
                 message: ParserErrorMessage::ExpectToken(kind),
@@ -130,8 +139,7 @@ impl Parser {
             .into());
         }
 
-        self.advance()?;
-        Ok(())
+        self.advance()
     }
 
     fn expression(&mut self) -> Result<Expression> {
@@ -253,6 +261,12 @@ impl Parser {
             return Ok(Expression::Literal { value });
         }
 
+        if self.match_tokens(&[TokenType::Identifier]) {
+            return Ok(Expression::Variable {
+                name: self.previous()?,
+            });
+        }
+
         if self.match_tokens(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
             self.consume(TokenType::RightParen)?;
@@ -267,6 +281,26 @@ impl Parser {
             token: Some(self.peek()?),
         }
         .into())
+    }
+
+    fn declaration(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::Var]) {
+            return self.var_declaration();
+        }
+
+        self.statement()
+    }
+
+    fn var_declaration(&mut self) -> Result<Statement> {
+        let name = self.consume(TokenType::Identifier)?;
+
+        let mut initializer = None;
+        if self.match_tokens(&[TokenType::Equal]) {
+            initializer = Some(Box::new(self.expression()?));
+        }
+
+        self.consume(TokenType::Semicolon)?;
+        Ok(Statement::Var { name, initializer })
     }
 
     fn statement(&mut self) -> Result<Statement> {

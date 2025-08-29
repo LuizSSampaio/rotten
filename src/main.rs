@@ -33,7 +33,7 @@ fn main() {
 fn run(source: String) -> anyhow::Result<Option<TokenValue>> {
     let tokens = lexer::run(source)?;
     let mut parser = parser::Parser::new(tokens);
-    let mut stmts = parser.parse()?;
+    let mut stmts = parser.parse();
     let mut interpreter = interpreter::Interpreter::default();
     interpreter.interpret(&mut stmts)
 }

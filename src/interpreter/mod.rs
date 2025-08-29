@@ -192,7 +192,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_variable(&mut self, name: &Token) -> Result<TokenValue> {
-        todo!()
+        self.environment.get(name.to_owned())
     }
 }
 
@@ -245,7 +245,14 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         name: &Token,
         initializer: &mut Option<Box<Expression>>,
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        let mut value = TokenValue::Nil;
+        if let Some(initializer) = initializer {
+            value = self.evaluate(initializer)?;
+        }
+
+        self.environment
+            .define(name.lexeme.to_owned(), value.to_owned());
+        Ok(Some(value))
     }
 
     fn visit_while(

@@ -154,7 +154,29 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         operator: &Token,
         right: &mut Expression,
     ) -> Result<TokenValue> {
-        todo!()
+        let left = self.evaluate(left)?;
+
+        match operator.kind {
+            TokenType::Or => {
+                if bool::from(left.clone()) {
+                    return Ok(left);
+                }
+            }
+            TokenType::And => {
+                if !bool::from(left.clone()) {
+                    return Ok(left);
+                }
+            }
+            _ => {
+                return Err(InterpreterError {
+                    token: Some(operator.to_owned()),
+                    message: InterpreterErrorMessage::Unreachable,
+                }
+                .into());
+            }
+        }
+
+        self.evaluate(right)
     }
 
     fn visit_set(

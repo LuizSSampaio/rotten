@@ -301,7 +301,11 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         condition: &mut Expression,
         body: &mut Statement,
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        while bool::from(self.evaluate(condition)?) {
+            body.accept(self)?;
+        }
+
+        Ok(None)
     }
 
     fn visit_for(

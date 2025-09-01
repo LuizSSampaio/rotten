@@ -367,6 +367,10 @@ impl Parser {
             return self.while_statement();
         }
 
+        if self.match_tokens(&[TokenType::For]) {
+            return self.for_statement();
+        }
+
         if self.match_tokens(&[TokenType::LeftBrace]) {
             return self.block_statement();
         }
@@ -387,6 +391,39 @@ impl Parser {
         Ok(Statement::While {
             condition: Box::new(condition),
             body: Box::new(body),
+        })
+    }
+
+    fn for_statement(&mut self) -> Result<Statement> {
+        self.consume(TokenType::LeftParen)?;
+
+        let initializer = if self.match_tokens(&[TokenType::Semicolon]) {
+            None
+        } else if self.match_tokens(&[TokenType::Var]) {
+            Some(Box::new(self.var_declaration()?))
+        } else {
+            Some(Box::new(self.expression_statement()?))
+        };
+
+        let condition = match !self.check(&TokenType::Semicolon) {
+            true => Some(Box::new(self.expression()?)),
+            false => None,
+        };
+        self.consume(TokenType::Semicolon)?;
+
+        let increment = match !self.check(&TokenType::RightParen) {
+            true => Some(Box::new(self.expression()?)),
+            false => None,
+        };
+        self.consume(TokenType::RightParen)?;
+
+        let body = Box::new(self.statement()?);
+
+        Ok(Statement::For {
+            initializer,
+            condition,
+            increment,
+            body,
         })
     }
 

@@ -363,6 +363,10 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::While]) {
+            return self.while_statement();
+        }
+
         if self.match_tokens(&[TokenType::LeftBrace]) {
             return self.block_statement();
         }
@@ -372,6 +376,18 @@ impl Parser {
         }
 
         self.expression_statement()
+    }
+
+    fn while_statement(&mut self) -> Result<Statement> {
+        self.consume(TokenType::LeftParen)?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen)?;
+        let body = self.statement()?;
+
+        Ok(Statement::While {
+            condition: Box::new(condition),
+            body: Box::new(body),
+        })
     }
 
     fn block_statement(&mut self) -> Result<Statement> {

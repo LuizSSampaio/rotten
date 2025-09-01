@@ -242,7 +242,13 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         then_branch: &mut Statement,
         else_branch: &mut Option<Box<Statement>>,
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        if bool::from(self.evaluate(condition)?) {
+            then_branch.accept(self)?;
+        } else if let Some(else_branch) = else_branch {
+            else_branch.accept(self)?;
+        }
+
+        Ok(None)
     }
 
     fn visit_return(

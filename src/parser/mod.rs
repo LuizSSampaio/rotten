@@ -285,7 +285,37 @@ impl Parser {
             });
         }
 
-        self.primary()
+        self.call()
+    }
+
+    fn call(&mut self) -> Result<Expression> {
+        let mut expr = self.primary()?;
+
+        loop {
+            if self.match_tokens(&[TokenType::LeftParen]) {
+                let mut arguments = Vec::new();
+                if !self.check(&TokenType::RightParen) {
+                    loop {
+                        arguments.push(self.expression()?);
+                        if !self.match_tokens(&[TokenType::Comma]) {
+                            break;
+                        }
+                    }
+                }
+
+                let paren = self.consume(TokenType::RightParen)?;
+
+                expr = Expression::Call {
+                    callee: Box::new(expr),
+                    paren,
+                    arguments,
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(expr)
     }
 
     fn primary(&mut self) -> Result<Expression> {

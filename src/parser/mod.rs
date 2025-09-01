@@ -400,14 +400,16 @@ impl Parser {
         let initializer = if self.match_tokens(&[TokenType::Semicolon]) {
             None
         } else if self.match_tokens(&[TokenType::Var]) {
-            Some(Box::new(self.var_declaration()?))
+            Some(self.var_declaration()?)
         } else {
-            Some(Box::new(self.expression_statement()?))
+            Some(self.expression_statement()?)
         };
 
         let condition = match !self.check(&TokenType::Semicolon) {
-            true => Some(Box::new(self.expression()?)),
-            false => None,
+            true => Box::new(self.expression()?),
+            false => Box::new(Expression::Literal {
+                value: TokenValue::Bool(true),
+            }),
         };
         self.consume(TokenType::Semicolon)?;
 
@@ -417,14 +419,31 @@ impl Parser {
         };
         self.consume(TokenType::RightParen)?;
 
-        let body = Box::new(self.statement()?);
+        let mut body = self.statement()?;
 
-        Ok(Statement::For {
-            initializer,
+        if let Some(increment) = increment {
+            body = Statement::Block {
+                statements: vec![
+                    body,
+                    Statement::Expression {
+                        expression: increment,
+                    },
+                ],
+            }
+        }
+
+        body = Statement::While {
             condition,
-            increment,
-            body,
-        })
+            body: Box::new(body),
+        };
+
+        if let Some(initializer) = initializer {
+            body = Statement::Block {
+                statements: vec![initializer, body],
+            }
+        }
+
+        Ok(body)
     }
 
     fn block_statement(&mut self) -> Result<Statement> {

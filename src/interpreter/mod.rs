@@ -307,14 +307,4 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
 
         Ok(None)
     }
-
-    fn visit_for(
-        &mut self,
-        initializer: &mut Option<Box<Statement>>,
-        condition: &mut Option<Box<Expression>>,
-        increment: &mut Option<Box<Expression>>,
-        body: &mut Statement,
-    ) -> Result<Option<TokenValue>> {
-        todo!()
-    }
 }

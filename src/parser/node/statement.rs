@@ -35,12 +35,6 @@ pub enum Statement {
         condition: Box<Expression>,
         body: Box<Statement>,
     },
-    For {
-        initializer: Option<Box<Statement>>,
-        condition: Option<Box<Expression>>,
-        increment: Option<Box<Expression>>,
-        body: Box<Statement>,
-    },
 }
 
 pub trait StatementVisitor<T> {
@@ -62,13 +56,6 @@ pub trait StatementVisitor<T> {
     fn visit_return(&mut self, keyword: &Token, value: &mut Option<Box<Expression>>) -> T;
     fn visit_var(&mut self, name: &Token, initializer: &mut Option<Box<Expression>>) -> T;
     fn visit_while(&mut self, condition: &mut Expression, body: &mut Statement) -> T;
-    fn visit_for(
-        &mut self,
-        initializer: &mut Option<Box<Statement>>,
-        condition: &mut Option<Box<Expression>>,
-        increment: &mut Option<Box<Expression>>,
-        body: &mut Statement,
-    ) -> T;
 }
 
 impl Statement {
@@ -92,13 +79,6 @@ impl Statement {
             Statement::Return { keyword, value } => visitor.visit_return(keyword, value),
             Statement::Var { name, initializer } => visitor.visit_var(name, initializer),
             Statement::While { condition, body } => visitor.visit_while(condition, body),
-            Statement::For {
-                initializer,
-                condition,
-                increment,
-                body,
-            } => visitor.visit_for(initializer, condition, increment, body),
         }
     }
 }
-

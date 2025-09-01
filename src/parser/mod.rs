@@ -335,6 +335,10 @@ impl Parser {
             return self.block_statement();
         }
 
+        if self.match_tokens(&[TokenType::If]) {
+            return self.if_statement();
+        }
+
         self.expression_statement()
     }
 
@@ -347,6 +351,24 @@ impl Parser {
 
         self.consume(TokenType::RightBrace)?;
         Ok(Statement::Block { statements })
+    }
+
+    fn if_statement(&mut self) -> Result<Statement> {
+        self.consume(TokenType::LeftParen)?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen)?;
+
+        let then_branch = self.statement()?;
+        let mut else_branch = None;
+        if self.match_tokens(&[TokenType::Else]) {
+            else_branch = Some(Box::new(self.statement()?));
+        }
+
+        Ok(Statement::If {
+            condition: Box::new(condition),
+            then_branch: Box::new(then_branch),
+            else_branch,
+        })
     }
 
     fn expression_statement(&mut self) -> Result<Statement> {

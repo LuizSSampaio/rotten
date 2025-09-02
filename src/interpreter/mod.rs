@@ -299,7 +299,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         &mut self,
         name: &Token,
         params: &[Token],
-        body: &mut [Statement],
+        body: &mut Statement,
     ) -> Result<Option<TokenValue>> {
         todo!()
     }

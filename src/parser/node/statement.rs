@@ -16,7 +16,7 @@ pub enum Statement {
     Function {
         name: Token,
         params: Vec<Token>,
-        body: Vec<Statement>,
+        body: Box<Statement>,
     },
     If {
         condition: Box<Expression>,
@@ -46,7 +46,7 @@ pub trait StatementVisitor<T> {
         methods: &mut [Statement],
     ) -> T;
     fn visit_expression(&mut self, expression: &mut Expression) -> T;
-    fn visit_function(&mut self, name: &Token, params: &[Token], body: &mut [Statement]) -> T;
+    fn visit_function(&mut self, name: &Token, params: &[Token], body: &mut Statement) -> T;
     fn visit_if(
         &mut self,
         condition: &mut Expression,

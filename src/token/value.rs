@@ -1,20 +1,30 @@
 use std::fmt::Display;
 
+use crate::parser::node::statement::StatementVisitor;
+
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum TokenValue {
     Bool(bool),
     Number(f64),
     String(String),
+    Function {
+        arity: u8,
+        call:
+            fn(&mut dyn StatementVisitor<()>, &[TokenValue]) -> anyhow::Result<Option<TokenValue>>,
+    },
     Nil,
 }
 
-impl From<TokenValue> for bool {
-    fn from(value: TokenValue) -> Self {
+impl TryFrom<TokenValue> for bool {
+    type Error = anyhow::Error;
+
+    fn try_from(value: TokenValue) -> Result<Self, Self::Error> {
         match value {
-            TokenValue::Bool(val) => val,
-            TokenValue::Number(val) => val != 0.0,
-            TokenValue::String(val) => !val.is_empty(),
-            TokenValue::Nil => false,
+            TokenValue::Bool(val) => Ok(val),
+            TokenValue::Number(val) => Ok(val != 0.0),
+            TokenValue::String(val) => Ok(!val.is_empty()),
+            TokenValue::Nil => Ok(false),
+            TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to bool")),
         }
     }
 }
@@ -67,6 +77,7 @@ impl TryFrom<TokenValue> for f64 {
                 .parse()
                 .map_err(|_| anyhow::anyhow!("Failed to parse string as f64: {:?}", val)),
             TokenValue::Nil => Err(anyhow::anyhow!("Cannot convert nil to f64")),
+            TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to f64")),
         }
     }
 }
@@ -78,6 +89,7 @@ impl Display for TokenValue {
             TokenValue::Number(val) => val.to_string(),
             TokenValue::String(val) => val.to_owned(),
             TokenValue::Nil => String::from("nil"),
+            TokenValue::Function { .. } => String::from("native function"),
         };
         write!(f, "{}", text)
     }

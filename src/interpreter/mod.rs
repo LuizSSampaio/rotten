@@ -158,12 +158,12 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
         match operator.kind {
             TokenType::Or => {
-                if bool::from(left.clone()) {
+                if bool::try_from(left.clone())? {
                     return Ok(left);
                 }
             }
             TokenType::And => {
-                if !bool::from(left.clone()) {
+                if !bool::try_from(left.clone())? {
                     return Ok(left);
                 }
             }
@@ -201,7 +201,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
         match operator.kind {
             TokenType::Bang => {
-                let val: bool = right_val.into();
+                let val: bool = right_val.try_into()?;
                 return Ok(TokenValue::Bool(!val));
             }
             TokenType::Minus => {
@@ -264,7 +264,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         then_branch: &mut Statement,
         else_branch: &mut Option<Box<Statement>>,
     ) -> Result<Option<TokenValue>> {
-        if bool::from(self.evaluate(condition)?) {
+        if bool::try_from(self.evaluate(condition)?)? {
             then_branch.accept(self)?;
         } else if let Some(else_branch) = else_branch {
             else_branch.accept(self)?;
@@ -301,7 +301,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         condition: &mut Expression,
         body: &mut Statement,
     ) -> Result<Option<TokenValue>> {
-        while bool::from(self.evaluate(condition)?) {
+        while bool::try_from(self.evaluate(condition)?)? {
             body.accept(self)?;
         }
 

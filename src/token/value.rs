@@ -2,17 +2,49 @@ use std::fmt::Display;
 
 use crate::parser::node::statement::StatementVisitor;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone)]
 pub enum TokenValue {
     Bool(bool),
     Number(f64),
     String(String),
     Function {
         arity: u8,
-        call:
-            fn(&mut dyn StatementVisitor<()>, &[TokenValue]) -> anyhow::Result<Option<TokenValue>>,
+        call: fn(
+            &mut dyn StatementVisitor<anyhow::Result<Option<TokenValue>>>,
+            &[TokenValue],
+        ) -> anyhow::Result<Option<TokenValue>>,
     },
     Nil,
+}
+
+impl PartialEq for TokenValue {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (TokenValue::Bool(a), TokenValue::Bool(b)) => a == b,
+            (TokenValue::Number(a), TokenValue::Number(b)) => a == b,
+            (TokenValue::String(a), TokenValue::String(b)) => a == b,
+            (TokenValue::Nil, TokenValue::Nil) => true,
+            (TokenValue::Function { arity: a, .. }, TokenValue::Function { arity: b, .. }) => {
+                a == b
+            }
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for TokenValue {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (TokenValue::Bool(a), TokenValue::Bool(b)) => a.partial_cmp(b),
+            (TokenValue::Number(a), TokenValue::Number(b)) => a.partial_cmp(b),
+            (TokenValue::String(a), TokenValue::String(b)) => a.partial_cmp(b),
+            (TokenValue::Nil, TokenValue::Nil) => Some(std::cmp::Ordering::Equal),
+            (TokenValue::Function { arity: a, .. }, TokenValue::Function { arity: b, .. }) => {
+                a.partial_cmp(b)
+            }
+            _ => None,
+        }
+    }
 }
 
 impl TryFrom<TokenValue> for bool {

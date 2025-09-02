@@ -133,7 +133,23 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         paren: &Token,
         arguments: &mut [Expression],
     ) -> Result<TokenValue> {
-        todo!()
+        let callee = self.evaluate(callee)?;
+
+        let mut val_arguments = Vec::new();
+        for argument in arguments {
+            val_arguments.push(self.evaluate(argument)?);
+        }
+
+        match callee {
+            TokenValue::Function { arity, call } => {
+                Ok((call)(self, &val_arguments)?.unwrap_or(TokenValue::Nil))
+            }
+            _ => Err(InterpreterError {
+                message: InterpreterErrorMessage::IsNotAFunction,
+                token: Some(paren.to_owned()),
+            }
+            .into()),
+        }
     }
 
     fn visit_get(&mut self, object: &mut Expression, name: &Token) -> Result<TokenValue> {

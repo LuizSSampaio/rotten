@@ -142,6 +142,17 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
         match callee {
             TokenValue::Function { arity, call } => {
+                if arity as usize != val_arguments.len() {
+                    return Err(InterpreterError {
+                        message: InterpreterErrorMessage::ArgumentMismatch {
+                            has: val_arguments.len(),
+                            expect: arity as usize,
+                        },
+                        token: Some(paren.to_owned()),
+                    }
+                    .into());
+                }
+
                 Ok((call)(self, &val_arguments)?.unwrap_or(TokenValue::Nil))
             }
             _ => Err(InterpreterError {

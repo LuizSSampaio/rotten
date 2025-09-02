@@ -10,6 +10,7 @@ pub enum InterpreterErrorMessage {
     DivisionByZero,
     UndefinedVariable { lexeme: String },
     IsNotAFunction,
+    ArgumentMismatch { has: usize, expect: usize },
 }
 
 #[derive(Debug, Clone)]
@@ -34,6 +35,9 @@ impl InterpreterError {
                 format!("Undefined variable '{}'", lexeme)
             }
             InterpreterErrorMessage::IsNotAFunction => "Is not a function".to_string(),
+            InterpreterErrorMessage::ArgumentMismatch { has, expect } => {
+                format!("Expected {} arguments but got {}", expect, has)
+            }
         }
     }
 

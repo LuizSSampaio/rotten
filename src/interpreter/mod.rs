@@ -153,7 +153,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
                     .into());
                 }
 
-                Ok((call)(self, &val_arguments)?.unwrap_or(TokenValue::Nil))
+                Ok((call)(self, &val_arguments)?)
             }
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::IsNotAFunction,

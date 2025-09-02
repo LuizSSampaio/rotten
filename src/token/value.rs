@@ -5,7 +5,7 @@ use crate::parser::node::statement::StatementVisitor;
 pub type NativeFn = fn(
     &mut dyn StatementVisitor<anyhow::Result<Option<TokenValue>>>,
     &[TokenValue],
-) -> anyhow::Result<Option<TokenValue>>;
+) -> anyhow::Result<TokenValue>;
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {

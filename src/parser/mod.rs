@@ -373,11 +373,40 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::Fun]) {
+            return self.function_declaration();
+        }
+
         if self.match_tokens(&[TokenType::Var]) {
             return self.var_declaration();
         }
 
         self.statement()
+    }
+
+    fn function_declaration(&mut self) -> Result<Statement> {
+        let name = self.consume(TokenType::Identifier)?;
+
+        let mut parameters = Vec::new();
+        if !self.check(&TokenType::RightParen) {
+            loop {
+                parameters.push(self.consume(TokenType::Identifier)?);
+
+                if !self.match_tokens(&[TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        self.consume(TokenType::RightParen)?;
+
+        self.consume(TokenType::LeftBrace)?;
+        let body = self.block_statement()?;
+
+        Ok(Statement::Function {
+            name,
+            params: parameters,
+            body: Box::new(body),
+        })
     }
 
     fn var_declaration(&mut self) -> Result<Statement> {

@@ -9,6 +9,7 @@ pub enum InterpreterErrorMessage {
     UnexpectedValue { is: TokenValue, expect: TokenValue },
     DivisionByZero,
     UndefinedVariable { lexeme: String },
+    IsNotAFunction,
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +33,7 @@ impl InterpreterError {
             InterpreterErrorMessage::UndefinedVariable { lexeme } => {
                 format!("Undefined variable '{}'", lexeme)
             }
+            InterpreterErrorMessage::IsNotAFunction => "Is not a function".to_string(),
         }
     }
 

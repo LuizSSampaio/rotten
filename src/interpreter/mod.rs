@@ -15,9 +15,28 @@ use anyhow::Result;
 mod environment;
 mod error;
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Interpreter {
     environment: Box<Environment>,
+}
+
+impl Default for Interpreter {
+    fn default() -> Self {
+        let mut environment = Box::new(Environment::default());
+
+        environment.define(
+            "print".to_string(),
+            TokenValue::Function {
+                arity: 1,
+                call: |_, args| {
+                    println!("{}", args[0]);
+                    Ok(TokenValue::Nil)
+                },
+            },
+        );
+
+        Self { environment }
+    }
 }
 
 impl Interpreter {

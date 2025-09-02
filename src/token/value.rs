@@ -2,18 +2,17 @@ use std::fmt::Display;
 
 use crate::parser::node::statement::StatementVisitor;
 
+pub type NativeFn = fn(
+    &mut dyn StatementVisitor<anyhow::Result<Option<TokenValue>>>,
+    &[TokenValue],
+) -> anyhow::Result<Option<TokenValue>>;
+
 #[derive(Debug, Clone)]
 pub enum TokenValue {
     Bool(bool),
     Number(f64),
     String(String),
-    Function {
-        arity: u8,
-        call: fn(
-            &mut dyn StatementVisitor<anyhow::Result<Option<TokenValue>>>,
-            &[TokenValue],
-        ) -> anyhow::Result<Option<TokenValue>>,
-    },
+    Function { arity: u8, call: NativeFn },
     Nil,
 }
 

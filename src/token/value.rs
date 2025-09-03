@@ -1,19 +1,23 @@
 use std::fmt::Display;
 
-use crate::parser::node::statement::StatementVisitor;
+use crate::{interpreter::Interpreter, parser::node::statement::Statement};
 
-pub type NativeFn = fn(
-    &mut dyn StatementVisitor<anyhow::Result<Option<TokenValue>>>,
-    &[TokenValue],
-) -> anyhow::Result<TokenValue>;
+pub type NativeFn =
+    fn(&mut Interpreter, &mut FunctionData, &[TokenValue]) -> anyhow::Result<TokenValue>;
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {
     Bool(bool),
     Number(f64),
     String(String),
-    Function { arity: u8, call: NativeFn },
+    Function { data: FunctionData, call: NativeFn },
     Nil,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionData {
+    pub body: Option<Vec<Statement>>,
+    pub params: Vec<String>,
 }
 
 impl PartialEq for TokenValue {
@@ -23,8 +27,8 @@ impl PartialEq for TokenValue {
             (TokenValue::Number(a), TokenValue::Number(b)) => a == b,
             (TokenValue::String(a), TokenValue::String(b)) => a == b,
             (TokenValue::Nil, TokenValue::Nil) => true,
-            (TokenValue::Function { arity: a, .. }, TokenValue::Function { arity: b, .. }) => {
-                a == b
+            (TokenValue::Function { data: a, .. }, TokenValue::Function { data: b, .. }) => {
+                a.params == b.params
             }
             _ => false,
         }
@@ -38,8 +42,8 @@ impl PartialOrd for TokenValue {
             (TokenValue::Number(a), TokenValue::Number(b)) => a.partial_cmp(b),
             (TokenValue::String(a), TokenValue::String(b)) => a.partial_cmp(b),
             (TokenValue::Nil, TokenValue::Nil) => Some(std::cmp::Ordering::Equal),
-            (TokenValue::Function { arity: a, .. }, TokenValue::Function { arity: b, .. }) => {
-                a.partial_cmp(b)
+            (TokenValue::Function { data: a, .. }, TokenValue::Function { data: b, .. }) => {
+                a.params.len().partial_cmp(&b.params.len())
             }
             _ => None,
         }

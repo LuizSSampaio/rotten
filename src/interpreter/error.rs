@@ -11,6 +11,7 @@ pub enum InterpreterErrorMessage {
     UndefinedVariable { lexeme: String },
     IsNotAFunction,
     ArgumentMismatch { has: usize, expect: usize },
+    MissingBlock,
 }
 
 #[derive(Debug, Clone)]
@@ -38,6 +39,7 @@ impl InterpreterError {
             InterpreterErrorMessage::ArgumentMismatch { has, expect } => {
                 format!("Expected {} arguments but got {}", expect, has)
             }
+            InterpreterErrorMessage::MissingBlock => "Missing code block".to_string(),
         }
     }
 

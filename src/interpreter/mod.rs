@@ -1,6 +1,6 @@
 use crate::{
     interpreter::{
-        environment::Environment,
+        environment::EnvironmentHandler,
         error::{InterpreterError, InterpreterErrorMessage},
     },
     parser::node::{
@@ -17,13 +17,12 @@ mod error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Interpreter {
-    environment: Box<Environment>,
+    environment: EnvironmentHandler,
 }
 
 impl Default for Interpreter {
     fn default() -> Self {
-        let mut environment = Box::new(Environment::default());
-
+        let mut environment: EnvironmentHandler = Default::default();
         environment.define(
             "print".to_string(),
             TokenValue::Function {
@@ -265,20 +264,27 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_variable(&mut self, name: &Token) -> Result<TokenValue> {
-        self.environment.get(name.to_owned())
+        match self.environment.get(name.to_owned()) {
+            Some(val) => Ok(val),
+            None => Err(InterpreterError {
+                message: InterpreterErrorMessage::UndefinedVariable {
+                    lexeme: name.lexeme.to_owned(),
+                },
+                token: Some(name.to_owned()),
+            }
+            .into()),
+        }
     }
 }
 
 impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
     fn visit_block(&mut self, statements: &mut [Statement]) -> Result<Option<TokenValue>> {
-        let previous = self.environment.to_owned();
-
-        self.environment = Box::new(Environment::new(previous.to_owned()));
+        self.environment.create_environment();
         for stmt in statements {
             stmt.accept(self)?;
         }
 
-        self.environment = previous;
+        self.environment.delete_environment()?;
         Ok(None)
     }
 
@@ -338,7 +344,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         }
 
         self.environment
-            .define(name.lexeme.to_owned(), value.to_owned());
+            .define(name.lexeme.to_owned(), value.to_owned())?;
         Ok(Some(value))
     }
 

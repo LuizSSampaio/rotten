@@ -7,12 +7,16 @@ use crate::{
         Expression, ExpressionVisitor,
         statement::{Statement, StatementVisitor},
     },
-    token::{Token, kind::TokenType, value::TokenValue},
+    token::{
+        Token,
+        kind::TokenType,
+        value::{FunctionData, TokenValue},
+    },
 };
 
 use anyhow::Result;
 
-mod environment;
+pub mod environment;
 mod error;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,16 +27,21 @@ pub struct Interpreter {
 impl Default for Interpreter {
     fn default() -> Self {
         let mut environment: EnvironmentHandler = Default::default();
-        environment.define(
-            "print".to_string(),
-            TokenValue::Function {
-                arity: 1,
-                call: |_, args| {
-                    println!("{}", args[0]);
-                    Ok(TokenValue::Nil)
+        environment
+            .define(
+                "print".to_string(),
+                TokenValue::Function {
+                    data: FunctionData {
+                        body: None,
+                        params: vec!["text".to_string()],
+                    },
+                    call: |_, _, args| {
+                        println!("{}", args[0]);
+                        Ok(TokenValue::Nil)
+                    },
                 },
-            },
-        );
+            )
+            .unwrap();
 
         Self { environment }
     }
@@ -159,19 +168,19 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         }
 
         match callee {
-            TokenValue::Function { arity, call } => {
-                if arity as usize != val_arguments.len() {
+            TokenValue::Function { mut data, call } => {
+                if data.params.len() != val_arguments.len() {
                     return Err(InterpreterError {
                         message: InterpreterErrorMessage::ArgumentMismatch {
                             has: val_arguments.len(),
-                            expect: arity as usize,
+                            expect: data.params.len(),
                         },
                         token: Some(paren.to_owned()),
                     }
                     .into());
                 }
 
-                Ok((call)(self, &val_arguments)?)
+                Ok((call)(self, &mut data, &val_arguments)?)
             }
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::IsNotAFunction,
@@ -307,7 +316,48 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         params: &[Token],
         body: &mut Statement,
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        let body = match body {
+            Statement::Block { statements } => statements,
+            _ => {
+                return Err(InterpreterError {
+                    message: InterpreterErrorMessage::MissingBlock,
+                    token: Some(name.to_owned()),
+                }
+                .into());
+            }
+        };
+
+        let function = TokenValue::Function {
+            data: FunctionData {
+                body: Some(body.to_owned()),
+                params: params.iter().map(|param| param.lexeme.to_owned()).collect(),
+            },
+            call: |interpreter, data, args| {
+                interpreter.environment.create_environment();
+                for (index, param) in args.iter().enumerate() {
+                    interpreter
+                        .environment
+                        .define(data.params.get(index).unwrap().to_owned(), param.to_owned())?;
+                }
+
+                let mut body = match data.body.to_owned() {
+                    Some(body) => body,
+                    None => {
+                        return Err(InterpreterError {
+                            message: InterpreterErrorMessage::MissingBlock,
+                            token: None,
+                        }
+                        .into());
+                    }
+                };
+                interpreter.visit_block(&mut body)?;
+                interpreter.environment.delete_environment()?;
+                Ok(TokenValue::Nil)
+            },
+        };
+
+        self.environment.define(name.lexeme.to_owned(), function)?;
+        Ok(None)
     }
 
     fn visit_if(

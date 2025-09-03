@@ -387,6 +387,7 @@ impl Parser {
     fn function_declaration(&mut self) -> Result<Statement> {
         let name = self.consume(TokenType::Identifier)?;
 
+        self.consume(TokenType::LeftParen)?;
         let mut parameters = Vec::new();
         if !self.check(&TokenType::RightParen) {
             loop {

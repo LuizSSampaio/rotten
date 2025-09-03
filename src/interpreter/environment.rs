@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map};
 
 use anyhow::Result;
 
@@ -7,63 +7,70 @@ use crate::{
     token::{Token, value::TokenValue},
 };
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct Environment {
-    enclosing: Option<Box<Environment>>,
-    values: HashMap<String, TokenValue>,
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentHandler {
+    environments: Vec<HashMap<String, TokenValue>>,
 }
 
-impl Environment {
-    pub fn new(enclosing: Box<Environment>) -> Self {
-        Self {
-            enclosing: Some(enclosing),
-            values: HashMap::default(),
+impl Default for EnvironmentHandler {
+    fn default() -> Self {
+        let mut handler = Self {
+            environments: Default::default(),
+        };
+        handler.create_environment();
+
+        handler
+    }
+}
+
+impl EnvironmentHandler {
+    pub fn create_environment(&mut self) {
+        self.environments.push(Default::default());
+    }
+
+    pub fn delete_environment(&mut self) -> Result<()> {
+        if self.environments.len() <= 1 {
+            return Err(anyhow::anyhow!("Need at least one environment"));
+        }
+
+        self.environments.pop();
+        Ok(())
+    }
+
+    pub fn define(&mut self, name: String, value: TokenValue) -> Result<()> {
+        match self.environments.last_mut() {
+            Some(env) => {
+                env.insert(name, value);
+                Ok(())
+            }
+            None => Err(anyhow::anyhow!("Need at least one environment")),
         }
     }
 
-    pub fn define(&mut self, name: String, value: TokenValue) {
-        self.values.insert(name, value);
-    }
-
-    pub fn get(&mut self, name: Token) -> Result<TokenValue> {
-        match self.values.get(&name.lexeme) {
-            Some(val) => Ok(val.to_owned()),
-            None => {
-                if let Some(mut enclosing) = self.enclosing.to_owned() {
-                    return enclosing.get(name);
-                }
-
-                Err(InterpreterError {
-                    message: InterpreterErrorMessage::UndefinedVariable {
-                        lexeme: name.lexeme.to_owned(),
-                    },
-                    token: Some(name),
-                }
-                .into())
+    pub fn get(&mut self, name: Token) -> Option<TokenValue> {
+        for env in self.environments.iter_mut().rev() {
+            if let Some(val) = env.get(&name.lexeme) {
+                return Some(val.to_owned());
             }
         }
+
+        None
     }
 
     pub fn assign(&mut self, name: Token, value: TokenValue) -> Result<()> {
-        match self.values.contains_key(&name.lexeme) {
-            true => {
-                self.values.insert(name.lexeme, value);
-                Ok(())
-            }
-            false => {
-                if let Some(mut enclosing) = self.enclosing.to_owned() {
-                    return enclosing.assign(name, value);
-                }
-
-                Err(InterpreterError {
-                    message: InterpreterErrorMessage::UndefinedVariable {
-                        lexeme: name.lexeme.to_owned(),
-                    },
-                    token: Some(name),
-                }
-                .into())
+        for env in self.environments.iter_mut().rev() {
+            if let hash_map::Entry::Occupied(mut e) = env.entry(name.lexeme.to_owned()) {
+                e.insert(value);
+                return Ok(());
             }
         }
+
+        Err(InterpreterError {
+            message: InterpreterErrorMessage::UndefinedVariable {
+                lexeme: name.lexeme.to_owned(),
+            },
+            token: Some(name),
+        }
+        .into())
     }
 }
-

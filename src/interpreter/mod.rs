@@ -1,7 +1,7 @@
 use crate::{
     interpreter::{
         environment::EnvironmentHandler,
-        error::{InterpreterError, InterpreterErrorMessage},
+        error::{InterpreterError, InterpreterErrorMessage, ReturnValue},
     },
     parser::node::{
         Expression, ExpressionVisitor,
@@ -10,7 +10,7 @@ use crate::{
     token::{
         Token,
         kind::TokenType,
-        value::{FunctionData, TokenValue},
+        value::{self, FunctionData, TokenValue},
     },
 };
 
@@ -290,7 +290,17 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
     fn visit_block(&mut self, statements: &mut [Statement]) -> Result<Option<TokenValue>> {
         self.environment.create_environment();
         for stmt in statements {
-            stmt.accept(self)?;
+            match stmt.accept(self) {
+                Ok(_) => {}
+                Err(err) => {
+                    self.environment.delete_environment()?;
+                    if let Some(rv) = err.downcast_ref::<ReturnValue>() {
+                        return Ok(Some(rv.0.clone()));
+                    } else {
+                        return Err(err);
+                    }
+                }
+            }
         }
 
         self.environment.delete_environment()?;
@@ -350,9 +360,11 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
                         .into());
                     }
                 };
-                interpreter.visit_block(&mut body)?;
+                let val = interpreter
+                    .visit_block(&mut body)?
+                    .unwrap_or(TokenValue::Nil);
                 interpreter.environment.delete_environment()?;
-                Ok(TokenValue::Nil)
+                Ok(val)
             },
         };
 
@@ -380,7 +392,12 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         keyword: &Token,
         value: &mut Option<Box<Expression>>,
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        let value = match value {
+            Some(val) => self.evaluate(val)?,
+            None => TokenValue::Nil,
+        };
+
+        Err(ReturnValue(value).into())
     }
 
     fn visit_var(

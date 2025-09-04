@@ -423,6 +423,10 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::Return]) {
+            return self.return_statement();
+        }
+
         if self.match_tokens(&[TokenType::While]) {
             return self.while_statement();
         }
@@ -440,6 +444,17 @@ impl Parser {
         }
 
         self.expression_statement()
+    }
+
+    fn return_statement(&mut self) -> Result<Statement> {
+        let keyword = self.previous()?;
+        let mut value = None;
+        if !self.check(&TokenType::Semicolon) {
+            value = Some(Box::new(self.expression()?));
+        }
+
+        self.consume(TokenType::Semicolon)?;
+        Ok(Statement::Return { keyword, value })
     }
 
     fn while_statement(&mut self) -> Result<Statement> {

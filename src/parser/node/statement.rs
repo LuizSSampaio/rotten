@@ -24,7 +24,6 @@ pub enum Statement {
         else_branch: Option<Box<Statement>>,
     },
     Return {
-        keyword: Token,
         value: Option<Box<Expression>>,
     },
     Var {
@@ -53,7 +52,7 @@ pub trait StatementVisitor<T> {
         then_branch: &mut Statement,
         else_branch: &mut Option<Box<Statement>>,
     ) -> T;
-    fn visit_return(&mut self, keyword: &Token, value: &mut Option<Box<Expression>>) -> T;
+    fn visit_return(&mut self, value: &mut Option<Box<Expression>>) -> T;
     fn visit_var(&mut self, name: &Token, initializer: &mut Option<Box<Expression>>) -> T;
     fn visit_while(&mut self, condition: &mut Expression, body: &mut Statement) -> T;
 }
@@ -76,7 +75,7 @@ impl Statement {
                 then_branch,
                 else_branch,
             } => visitor.visit_if(condition, then_branch, else_branch),
-            Statement::Return { keyword, value } => visitor.visit_return(keyword, value),
+            Statement::Return { value } => visitor.visit_return(value),
             Statement::Var { name, initializer } => visitor.visit_var(name, initializer),
             Statement::While { condition, body } => visitor.visit_while(condition, body),
         }

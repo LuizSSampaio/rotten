@@ -447,14 +447,13 @@ impl Parser {
     }
 
     fn return_statement(&mut self) -> Result<Statement> {
-        let keyword = self.previous()?;
         let mut value = None;
         if !self.check(&TokenType::Semicolon) {
             value = Some(Box::new(self.expression()?));
         }
 
         self.consume(TokenType::Semicolon)?;
-        Ok(Statement::Return { keyword, value })
+        Ok(Statement::Return { value })
     }
 
     fn while_statement(&mut self) -> Result<Statement> {

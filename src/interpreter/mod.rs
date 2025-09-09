@@ -387,11 +387,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         Ok(None)
     }
 
-    fn visit_return(
-        &mut self,
-        keyword: &Token,
-        value: &mut Option<Box<Expression>>,
-    ) -> Result<Option<TokenValue>> {
+    fn visit_return(&mut self, value: &mut Option<Box<Expression>>) -> Result<Option<TokenValue>> {
         let value = match value {
             Some(val) => self.evaluate(val)?,
             None => TokenValue::Nil,

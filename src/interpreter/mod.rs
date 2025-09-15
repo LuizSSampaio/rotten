@@ -10,7 +10,7 @@ use crate::{
     token::{
         Token,
         kind::TokenType,
-        value::{self, FunctionData, TokenValue},
+        value::{Class, Function, FunctionData, TokenValue},
     },
 };
 
@@ -30,7 +30,7 @@ impl Default for Interpreter {
         environment
             .define(
                 "print".to_string(),
-                TokenValue::Function {
+                TokenValue::Function(Function {
                     data: FunctionData {
                         body: None,
                         params: vec!["text".to_string()],
@@ -39,7 +39,7 @@ impl Default for Interpreter {
                         println!("{}", args[0]);
                         Ok(TokenValue::Nil)
                     },
-                },
+                }),
             )
             .unwrap();
 
@@ -168,19 +168,19 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         }
 
         match callee {
-            TokenValue::Function { mut data, call } => {
-                if data.params.len() != val_arguments.len() {
+            TokenValue::Function(mut func) => {
+                if func.data.params.len() != val_arguments.len() {
                     return Err(InterpreterError {
                         message: InterpreterErrorMessage::ArgumentMismatch {
                             has: val_arguments.len(),
-                            expect: data.params.len(),
+                            expect: func.data.params.len(),
                         },
                         token: Some(paren.to_owned()),
                     }
                     .into());
                 }
 
-                Ok((call)(self, &mut data, &val_arguments)?)
+                Ok((func.call)(self, &mut func.data, &val_arguments)?)
             }
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::IsNotCallable,
@@ -315,9 +315,9 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
     ) -> Result<Option<TokenValue>> {
         self.environment
             .define(name.lexeme.clone(), TokenValue::Nil)?;
-        let class = TokenValue::Class {
+        let class = TokenValue::Class(Class {
             name: name.lexeme.clone(),
-        };
+        });
         self.environment.assign(name.to_owned(), class.clone())?;
         Ok(Some(class))
     }
@@ -343,7 +343,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
             }
         };
 
-        let function = TokenValue::Function {
+        let function = TokenValue::Function(Function {
             data: FunctionData {
                 body: Some(body.to_owned()),
                 params: params.iter().map(|param| param.lexeme.to_owned()).collect(),
@@ -372,7 +372,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
                 interpreter.environment.delete_environment()?;
                 Ok(val)
             },
-        };
+        });
 
         self.environment.define(name.lexeme.to_owned(), function)?;
         Ok(None)

@@ -6,12 +6,29 @@ pub type NativeFn =
     fn(&mut Interpreter, &mut FunctionData, &[TokenValue]) -> anyhow::Result<TokenValue>;
 
 #[derive(Debug, Clone)]
+pub struct Function {
+    pub data: FunctionData,
+    pub call: NativeFn,
+}
+
+#[derive(Debug, Clone)]
+pub struct Class {
+    pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Instance {
+    pub class: Class,
+}
+
+#[derive(Debug, Clone)]
 pub enum TokenValue {
     Bool(bool),
     Number(f64),
     String(String),
-    Function { data: FunctionData, call: NativeFn },
-    Class { name: String },
+    Function(Function),
+    Class(Class),
+    Instance(Instance),
     Nil,
 }
 
@@ -28,9 +45,7 @@ impl PartialEq for TokenValue {
             (TokenValue::Number(a), TokenValue::Number(b)) => a == b,
             (TokenValue::String(a), TokenValue::String(b)) => a == b,
             (TokenValue::Nil, TokenValue::Nil) => true,
-            (TokenValue::Function { data: a, .. }, TokenValue::Function { data: b, .. }) => {
-                a.params == b.params
-            }
+            (TokenValue::Function(a), TokenValue::Function(b)) => a.data.params == b.data.params,
             _ => false,
         }
     }
@@ -43,8 +58,8 @@ impl PartialOrd for TokenValue {
             (TokenValue::Number(a), TokenValue::Number(b)) => a.partial_cmp(b),
             (TokenValue::String(a), TokenValue::String(b)) => a.partial_cmp(b),
             (TokenValue::Nil, TokenValue::Nil) => Some(std::cmp::Ordering::Equal),
-            (TokenValue::Function { data: a, .. }, TokenValue::Function { data: b, .. }) => {
-                a.params.len().partial_cmp(&b.params.len())
+            (TokenValue::Function(a), TokenValue::Function(b)) => {
+                a.data.params.len().partial_cmp(&b.data.params.len())
             }
             _ => None,
         }
@@ -60,8 +75,9 @@ impl TryFrom<TokenValue> for bool {
             TokenValue::Number(val) => Ok(val != 0.0),
             TokenValue::String(val) => Ok(!val.is_empty()),
             TokenValue::Nil => Ok(false),
-            TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to bool")),
-            TokenValue::Class { .. } => Err(anyhow::anyhow!("Cannot convert class to bool")),
+            TokenValue::Function(_) => Err(anyhow::anyhow!("Cannot convert function to bool")),
+            TokenValue::Class(_) => Err(anyhow::anyhow!("Cannot convert class to bool")),
+            TokenValue::Instance(_) => Err(anyhow::anyhow!("Cannot convert Instance to bool")),
         }
     }
 }
@@ -114,8 +130,9 @@ impl TryFrom<TokenValue> for f64 {
                 .parse()
                 .map_err(|_| anyhow::anyhow!("Failed to parse string as f64: {:?}", val)),
             TokenValue::Nil => Err(anyhow::anyhow!("Cannot convert nil to f64")),
-            TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to f64")),
-            TokenValue::Class { .. } => Err(anyhow::anyhow!("Cannot convert class to f64")),
+            TokenValue::Function(_) => Err(anyhow::anyhow!("Cannot convert function to f64")),
+            TokenValue::Class(_) => Err(anyhow::anyhow!("Cannot convert class to f64")),
+            TokenValue::Instance(_) => Err(anyhow::anyhow!("Cannot convert Instance to f64")),
         }
     }
 }
@@ -127,8 +144,9 @@ impl Display for TokenValue {
             TokenValue::Number(val) => val.to_string(),
             TokenValue::String(val) => val.to_owned(),
             TokenValue::Nil => String::from("nil"),
-            TokenValue::Function { .. } => String::from("native function"),
-            TokenValue::Class { name, .. } => name.to_string(),
+            TokenValue::Function(_) => String::from("native function"),
+            TokenValue::Class(val) => val.name.to_string(),
+            TokenValue::Instance(val) => format!("{} instance", val.class.name),
         };
         write!(f, "{}", text)
     }

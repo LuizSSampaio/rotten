@@ -373,6 +373,10 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Statement> {
+        if self.match_tokens(&[TokenType::Class]) {
+            return self.class_declaration();
+        }
+
         if self.match_tokens(&[TokenType::Fun]) {
             return self.function_declaration();
         }
@@ -382,6 +386,23 @@ impl Parser {
         }
 
         self.statement()
+    }
+
+    fn class_declaration(&mut self) -> Result<Statement> {
+        let name = self.consume(TokenType::Identifier)?;
+
+        self.consume(TokenType::LeftBrace)?;
+        let mut methods = Vec::new();
+        while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
+            methods.push(self.function_declaration()?);
+        }
+        self.consume(TokenType::RightBrace)?;
+
+        Ok(Statement::Class {
+            name,
+            superclass: None,
+            methods,
+        })
     }
 
     fn function_declaration(&mut self) -> Result<Statement> {

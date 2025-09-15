@@ -11,6 +11,7 @@ pub enum TokenValue {
     Number(f64),
     String(String),
     Function { data: FunctionData, call: NativeFn },
+    Class { name: String },
     Nil,
 }
 
@@ -60,6 +61,7 @@ impl TryFrom<TokenValue> for bool {
             TokenValue::String(val) => Ok(!val.is_empty()),
             TokenValue::Nil => Ok(false),
             TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to bool")),
+            TokenValue::Class { .. } => Err(anyhow::anyhow!("Cannot convert class to bool")),
         }
     }
 }
@@ -113,6 +115,7 @@ impl TryFrom<TokenValue> for f64 {
                 .map_err(|_| anyhow::anyhow!("Failed to parse string as f64: {:?}", val)),
             TokenValue::Nil => Err(anyhow::anyhow!("Cannot convert nil to f64")),
             TokenValue::Function { .. } => Err(anyhow::anyhow!("Cannot convert function to f64")),
+            TokenValue::Class { .. } => Err(anyhow::anyhow!("Cannot convert class to f64")),
         }
     }
 }
@@ -125,6 +128,7 @@ impl Display for TokenValue {
             TokenValue::String(val) => val.to_owned(),
             TokenValue::Nil => String::from("nil"),
             TokenValue::Function { .. } => String::from("native function"),
+            TokenValue::Class { name, .. } => name.to_string(),
         };
         write!(f, "{}", text)
     }

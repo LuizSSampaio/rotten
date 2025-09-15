@@ -310,6 +310,12 @@ impl Parser {
                     paren,
                     arguments,
                 }
+            } else if self.match_tokens(&[TokenType::Dot]) {
+                let name = self.consume(TokenType::Identifier)?;
+                expr = Expression::Get {
+                    object: Box::new(expr),
+                    name,
+                }
             } else {
                 break;
             }

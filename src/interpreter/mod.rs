@@ -183,7 +183,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
                 Ok((call)(self, &mut data, &val_arguments)?)
             }
             _ => Err(InterpreterError {
-                message: InterpreterErrorMessage::IsNotAFunction,
+                message: InterpreterErrorMessage::IsNotCallable,
                 token: Some(paren.to_owned()),
             }
             .into()),

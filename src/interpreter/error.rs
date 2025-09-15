@@ -9,7 +9,7 @@ pub enum InterpreterErrorMessage {
     UnexpectedValue { is: TokenValue, expect: TokenValue },
     DivisionByZero,
     UndefinedVariable { lexeme: String },
-    IsNotAFunction,
+    IsNotCallable,
     ArgumentMismatch { has: usize, expect: usize },
     MissingBlock,
 }
@@ -35,7 +35,7 @@ impl InterpreterError {
             InterpreterErrorMessage::UndefinedVariable { lexeme } => {
                 format!("Undefined variable '{}'", lexeme)
             }
-            InterpreterErrorMessage::IsNotAFunction => "Is not a function".to_string(),
+            InterpreterErrorMessage::IsNotCallable => "Is not callable".to_string(),
             InterpreterErrorMessage::ArgumentMismatch { has, expect } => {
                 format!("Expected {} arguments but got {}", expect, has)
             }

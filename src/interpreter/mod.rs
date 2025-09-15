@@ -1,8 +1,6 @@
 use crate::{
-    interpreter::{
-        environment::EnvironmentHandler,
-        error::{InterpreterError, InterpreterErrorMessage, ReturnValue},
-    },
+    interpreter::error::{InterpreterError, InterpreterErrorMessage, ReturnValue},
+    memory::handler::EnvironmentHandler,
     parser::node::{
         Expression, ExpressionVisitor,
         statement::{Statement, StatementVisitor},
@@ -10,13 +8,12 @@ use crate::{
     token::{
         Token,
         kind::TokenType,
-        value::{Class, Function, FunctionData, Instance, TokenValue},
+        value::{Class, Function, FunctionData, TokenValue, instance::Instance},
     },
 };
 
 use anyhow::Result;
 
-pub mod environment;
 mod error;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -79,7 +76,7 @@ impl Interpreter {
 impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     fn visit_assign(&mut self, name: &Token, value: &mut Expression) -> Result<TokenValue> {
         let value = self.evaluate(value)?;
-        self.environment.assign(name.to_owned(), value.to_owned())?;
+        self.environment.assign(name, value.to_owned())?;
         Ok(value)
     }
 
@@ -276,7 +273,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_variable(&mut self, name: &Token) -> Result<TokenValue> {
-        match self.environment.get(name.to_owned()) {
+        match self.environment.get(name) {
             Some(val) => Ok(val),
             None => Err(InterpreterError {
                 message: InterpreterErrorMessage::UndefinedVariable {
@@ -321,7 +318,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         let class = TokenValue::Class(Class {
             name: name.lexeme.clone(),
         });
-        self.environment.assign(name.to_owned(), class.clone())?;
+        self.environment.assign(name, class.clone())?;
         Ok(Some(class))
     }
 

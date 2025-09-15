@@ -11,6 +11,7 @@ use crate::{interpreter::Interpreter, token::value::TokenValue};
 
 mod interpreter;
 mod lexer;
+mod memory;
 mod parser;
 mod token;
 

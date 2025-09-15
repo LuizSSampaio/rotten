@@ -1,15 +1,13 @@
-use std::collections::{HashMap, hash_map};
-
 use anyhow::Result;
 
 use crate::{
-    interpreter::error::{InterpreterError, InterpreterErrorMessage},
+    memory::environment::Environment,
     token::{Token, value::TokenValue},
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnvironmentHandler {
-    environments: Vec<HashMap<String, TokenValue>>,
+    environments: Vec<Environment>,
 }
 
 impl Default for EnvironmentHandler {
@@ -40,16 +38,16 @@ impl EnvironmentHandler {
     pub fn define(&mut self, name: String, value: TokenValue) -> Result<()> {
         match self.environments.last_mut() {
             Some(env) => {
-                env.insert(name, value);
+                env.define(name, value);
                 Ok(())
             }
             None => Err(anyhow::anyhow!("Need at least one environment")),
         }
     }
 
-    pub fn get(&mut self, name: Token) -> Option<TokenValue> {
+    pub fn get(&mut self, name: &Token) -> Option<TokenValue> {
         for env in self.environments.iter_mut().rev() {
-            if let Some(val) = env.get(&name.lexeme) {
+            if let Some(val) = env.get(name) {
                 return Some(val.to_owned());
             }
         }
@@ -57,20 +55,13 @@ impl EnvironmentHandler {
         None
     }
 
-    pub fn assign(&mut self, name: Token, value: TokenValue) -> Result<()> {
+    pub fn assign(&mut self, name: &Token, value: TokenValue) -> Result<()> {
         for env in self.environments.iter_mut().rev() {
-            if let hash_map::Entry::Occupied(mut e) = env.entry(name.lexeme.to_owned()) {
-                e.insert(value);
+            if env.assign(name, value.clone()).is_ok() {
                 return Ok(());
             }
         }
 
-        Err(InterpreterError {
-            message: InterpreterErrorMessage::UndefinedVariable {
-                lexeme: name.lexeme.to_owned(),
-            },
-            token: Some(name),
-        }
-        .into())
+        anyhow::bail!("Undefined variable")
     }
 }

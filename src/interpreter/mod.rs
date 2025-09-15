@@ -253,7 +253,27 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         name: &Token,
         value: &mut Expression,
     ) -> Result<TokenValue> {
-        todo!()
+        let object = self.evaluate(object)?;
+        let value = self.evaluate(value)?;
+
+        match object {
+            TokenValue::Instance(mut instance) => {
+                instance
+                    .fields
+                    .define(name.lexeme.to_owned(), value.clone());
+                Ok(value)
+            }
+            _ => Err(InterpreterError {
+                message: InterpreterErrorMessage::UnexpectedValue {
+                    is: object,
+                    expect: TokenValue::Instance(Instance::new(Class {
+                        name: String::new(),
+                    })),
+                },
+                token: Some(name.to_owned()),
+            }
+            .into()),
+        }
     }
 
     fn visit_super(&mut self, keyword: &Token, method: &Token) -> Result<TokenValue> {

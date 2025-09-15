@@ -179,9 +179,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
                 Ok((func.call)(self, &mut func.data, &val_arguments)?)
             }
-            TokenValue::Class(class) => Ok(TokenValue::Instance(Instance {
-                class: class.clone(),
-            })),
+            TokenValue::Class(class) => Ok(TokenValue::Instance(Instance::new(class.clone()))),
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::IsNotCallable,
                 token: Some(paren.to_owned()),

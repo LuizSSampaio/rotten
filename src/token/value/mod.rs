@@ -1,6 +1,10 @@
 use std::fmt::Display;
 
-use crate::{interpreter::Interpreter, parser::node::statement::Statement};
+use crate::{
+    interpreter::Interpreter, parser::node::statement::Statement, token::value::instance::Instance,
+};
+
+pub mod instance;
 
 pub type NativeFn =
     fn(&mut Interpreter, &mut FunctionData, &[TokenValue]) -> anyhow::Result<TokenValue>;
@@ -14,11 +18,6 @@ pub struct Function {
 #[derive(Debug, Clone)]
 pub struct Class {
     pub name: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct Instance {
-    pub class: Class,
 }
 
 #[derive(Debug, Clone)]

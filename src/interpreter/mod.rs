@@ -189,7 +189,23 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_get(&mut self, object: &mut Expression, name: &Token) -> Result<TokenValue> {
-        todo!()
+        let object = self.evaluate(object)?;
+
+        match object {
+            TokenValue::Instance(mut instance) => {
+                Ok(instance.fields.get(name).unwrap_or(TokenValue::Nil))
+            }
+            _ => Err(InterpreterError {
+                message: InterpreterErrorMessage::UnexpectedValue {
+                    is: object,
+                    expect: TokenValue::Instance(Instance::new(Class {
+                        name: String::new(),
+                    })),
+                },
+                token: Some(name.to_owned()),
+            }
+            .into()),
+        }
     }
 
     fn visit_grouping(&mut self, expression: &mut Expression) -> Result<TokenValue> {

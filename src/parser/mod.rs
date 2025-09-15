@@ -160,6 +160,13 @@ impl Parser {
                         value: Box::new(value),
                     });
                 }
+                Expression::Get { object, name } => {
+                    return Ok(Expression::Set {
+                        object,
+                        name,
+                        value: Box::new(value),
+                    });
+                }
                 _ => {
                     return Err(ParserError {
                         message: ParserErrorMessage::InvalidAssignment,

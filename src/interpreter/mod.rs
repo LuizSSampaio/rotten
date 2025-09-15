@@ -10,7 +10,7 @@ use crate::{
     token::{
         Token,
         kind::TokenType,
-        value::{Class, Function, FunctionData, TokenValue},
+        value::{Class, Function, FunctionData, Instance, TokenValue},
     },
 };
 
@@ -182,6 +182,9 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
                 Ok((func.call)(self, &mut func.data, &val_arguments)?)
             }
+            TokenValue::Class(class) => Ok(TokenValue::Instance(Instance {
+                class: class.clone(),
+            })),
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::IsNotCallable,
                 token: Some(paren.to_owned()),

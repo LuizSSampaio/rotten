@@ -313,7 +313,13 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         superclass: &mut Option<Box<Expression>>,
         methods: &mut [Statement],
     ) -> Result<Option<TokenValue>> {
-        todo!()
+        self.environment
+            .define(name.lexeme.clone(), TokenValue::Nil)?;
+        let class = TokenValue::Class {
+            name: name.lexeme.clone(),
+        };
+        self.environment.assign(name.to_owned(), class.clone())?;
+        Ok(Some(class))
     }
 
     fn visit_expression(&mut self, expression: &mut Expression) -> Result<Option<TokenValue>> {

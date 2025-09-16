@@ -363,6 +363,12 @@ impl Parser {
             return Ok(Expression::Literal { value });
         }
 
+        if self.match_tokens(&[TokenType::This]) {
+            return Ok(Expression::This {
+                keyword: self.previous()?,
+            });
+        }
+
         if self.match_tokens(&[TokenType::Identifier]) {
             return Ok(Expression::Variable {
                 name: self.previous()?,

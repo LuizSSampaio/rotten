@@ -71,6 +71,55 @@ impl Interpreter {
             .into()
         })
     }
+
+    fn create_function(
+        &mut self,
+        name: &Token,
+        params: &[Token],
+        body: &mut Statement,
+    ) -> Result<Function> {
+        let body = match body {
+            Statement::Block { statements } => statements,
+            _ => {
+                return Err(InterpreterError {
+                    message: InterpreterErrorMessage::MissingBlock,
+                    token: Some(name.to_owned()),
+                }
+                .into());
+            }
+        };
+
+        Ok(Function {
+            data: FunctionData {
+                body: Some(body.to_owned()),
+                params: params.iter().map(|param| param.lexeme.to_owned()).collect(),
+            },
+            call: |interpreter, data, args| {
+                interpreter.environment.create_environment();
+                for (index, param) in args.iter().enumerate() {
+                    interpreter
+                        .environment
+                        .define(data.params.get(index).unwrap().to_owned(), param.to_owned())?;
+                }
+
+                let mut body = match data.body.to_owned() {
+                    Some(body) => body,
+                    None => {
+                        return Err(InterpreterError {
+                            message: InterpreterErrorMessage::MissingBlock,
+                            token: None,
+                        }
+                        .into());
+                    }
+                };
+                let val = interpreter
+                    .visit_block(&mut body)?
+                    .unwrap_or(TokenValue::Nil);
+                interpreter.environment.delete_environment()?;
+                Ok(val)
+            },
+        })
+    }
 }
 
 impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
@@ -366,48 +415,7 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         params: &[Token],
         body: &mut Statement,
     ) -> Result<Option<TokenValue>> {
-        let body = match body {
-            Statement::Block { statements } => statements,
-            _ => {
-                return Err(InterpreterError {
-                    message: InterpreterErrorMessage::MissingBlock,
-                    token: Some(name.to_owned()),
-                }
-                .into());
-            }
-        };
-
-        let function = TokenValue::Function(Function {
-            data: FunctionData {
-                body: Some(body.to_owned()),
-                params: params.iter().map(|param| param.lexeme.to_owned()).collect(),
-            },
-            call: |interpreter, data, args| {
-                interpreter.environment.create_environment();
-                for (index, param) in args.iter().enumerate() {
-                    interpreter
-                        .environment
-                        .define(data.params.get(index).unwrap().to_owned(), param.to_owned())?;
-                }
-
-                let mut body = match data.body.to_owned() {
-                    Some(body) => body,
-                    None => {
-                        return Err(InterpreterError {
-                            message: InterpreterErrorMessage::MissingBlock,
-                            token: None,
-                        }
-                        .into());
-                    }
-                };
-                let val = interpreter
-                    .visit_block(&mut body)?
-                    .unwrap_or(TokenValue::Nil);
-                interpreter.environment.delete_environment()?;
-                Ok(val)
-            },
-        });
-
+        let function = TokenValue::Function(self.create_function(name, params, body)?);
         self.environment.define(name.lexeme.to_owned(), function)?;
         Ok(None)
     }

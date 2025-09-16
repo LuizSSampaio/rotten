@@ -45,8 +45,8 @@ impl EnvironmentHandler {
         }
     }
 
-    pub fn get(&mut self, name: &Token) -> Option<TokenValue> {
-        for env in self.environments.iter_mut().rev() {
+    pub fn get(&self, name: &Token) -> Option<TokenValue> {
+        for env in self.environments.iter().rev() {
             if let Some(val) = env.get(name) {
                 return Some(val.to_owned());
             }

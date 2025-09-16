@@ -14,7 +14,7 @@ impl Environment {
         self.data.insert(name, value);
     }
 
-    pub fn get(&mut self, name: &Token) -> Option<TokenValue> {
+    pub fn get(&self, name: &Token) -> Option<TokenValue> {
         self.data.get(&name.lexeme).map(|val| val.to_owned())
     }
 

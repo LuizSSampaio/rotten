@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::{
     interpreter::Interpreter, parser::node::statement::Statement, token::value::instance::Instance,
@@ -18,6 +18,7 @@ pub struct Function {
 #[derive(Debug, Clone)]
 pub struct Class {
     pub name: String,
+    pub methods: HashMap<String, Function>,
 }
 
 #[derive(Debug, Clone)]

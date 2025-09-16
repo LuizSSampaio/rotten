@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     interpreter::error::{InterpreterError, InterpreterErrorMessage, ReturnValue},
     memory::handler::EnvironmentHandler,
@@ -241,14 +243,13 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let object = self.evaluate(object)?;
 
         match object {
-            TokenValue::Instance(mut instance) => {
-                Ok(instance.fields.get(name).unwrap_or(TokenValue::Nil))
-            }
+            TokenValue::Instance(instance) => Ok(instance.get(name).unwrap_or(TokenValue::Nil)),
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
                     is: object,
                     expect: TokenValue::Instance(Instance::new(Class {
                         name: String::new(),
+                        methods: HashMap::new(),
                     })),
                 },
                 token: Some(name.to_owned()),
@@ -317,6 +318,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
                     is: object,
                     expect: TokenValue::Instance(Instance::new(Class {
                         name: String::new(),
+                        methods: HashMap::new(),
                     })),
                 },
                 token: Some(name.to_owned()),
@@ -398,9 +400,31 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
     ) -> Result<Option<TokenValue>> {
         self.environment
             .define(name.lexeme.clone(), TokenValue::Nil)?;
+
+        let mut methods_map = HashMap::new();
+        for method in methods {
+            match method {
+                Statement::Function { name, params, body } => {
+                    methods_map.insert(
+                        name.lexeme.clone(),
+                        self.create_function(name, params, body)?,
+                    );
+                }
+                _ => {
+                    return Err(InterpreterError {
+                        message: InterpreterErrorMessage::IsNotCallable,
+                        token: Some(name.to_owned()),
+                    }
+                    .into());
+                }
+            }
+        }
+
         let class = TokenValue::Class(Class {
             name: name.lexeme.clone(),
+            methods: methods_map,
         });
+
         self.environment.assign(name, class.clone())?;
         Ok(Some(class))
     }

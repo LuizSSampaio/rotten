@@ -4,16 +4,10 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use crate::token::value::{function::Function, instance::Instance};
+
+pub mod function;
 pub mod instance;
-
-pub type NativeFn =
-    fn(&mut Interpreter, &mut FunctionData, &[TokenValue]) -> anyhow::Result<TokenValue>;
-
-#[derive(Debug, Clone)]
-pub struct Function {
-    pub data: FunctionData,
-    pub call: NativeFn,
-}
 
 #[derive(Debug, Clone)]
 pub struct Class {
@@ -30,12 +24,6 @@ pub enum TokenValue {
     Class(Class),
     Instance(Arc<RwLock<Instance>>),
     Nil,
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionData {
-    pub body: Option<Vec<Statement>>,
-    pub params: Vec<String>,
 }
 
 impl PartialEq for TokenValue {

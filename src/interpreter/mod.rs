@@ -10,7 +10,11 @@ use crate::{
     token::{
         Token,
         kind::TokenType,
-        value::{Class, Function, FunctionData, TokenValue, instance::Instance},
+        value::{
+            Class, TokenValue,
+            function::{Function, FunctionData},
+            instance::Instance,
+        },
     },
 };
 

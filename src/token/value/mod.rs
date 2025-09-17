@@ -1,7 +1,7 @@
-use std::{collections::HashMap, fmt::Display};
-
-use crate::{
-    interpreter::Interpreter, parser::node::statement::Statement, token::value::instance::Instance,
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    sync::{Arc, RwLock},
 };
 
 pub mod instance;
@@ -28,7 +28,7 @@ pub enum TokenValue {
     String(String),
     Function(Function),
     Class(Class),
-    Instance(Instance),
+    Instance(Arc<RwLock<Instance>>),
     Nil,
 }
 
@@ -146,7 +146,7 @@ impl Display for TokenValue {
             TokenValue::Nil => String::from("nil"),
             TokenValue::Function(_) => String::from("native function"),
             TokenValue::Class(val) => val.name.to_string(),
-            TokenValue::Instance(val) => format!("{} instance", val.class.name),
+            TokenValue::Instance(val) => format!("{} instance", val.read().unwrap().class.name),
         };
         write!(f, "{}", text)
     }

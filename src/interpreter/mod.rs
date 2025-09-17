@@ -33,6 +33,7 @@ impl Default for Interpreter {
                     data: FunctionData {
                         body: None,
                         params: vec!["text".to_string()],
+                        this: None,
                     },
                     call: |_, _, args| {
                         println!("{}", args[0]);
@@ -95,9 +96,17 @@ impl Interpreter {
             data: FunctionData {
                 body: Some(body.to_owned()),
                 params: params.iter().map(|param| param.lexeme.to_owned()).collect(),
+                this: None,
             },
             call: |interpreter, data, args| {
                 interpreter.environment.create_environment();
+
+                if let Some(this) = data.this.clone() {
+                    interpreter
+                        .environment
+                        .define("this".to_string(), TokenValue::Instance(this))?;
+                }
+
                 for (index, param) in args.iter().enumerate() {
                     interpreter
                         .environment
@@ -243,7 +252,11 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let object = self.evaluate(object)?;
 
         match object {
-            TokenValue::Instance(instance) => Ok(instance.get(name).unwrap_or(TokenValue::Nil)),
+            TokenValue::Instance(instance) => Ok(instance
+                .read()
+                .unwrap()
+                .get(name)
+                .unwrap_or(TokenValue::Nil)),
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
                     is: object,
@@ -307,8 +320,10 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
         let value = self.evaluate(value)?;
 
         match object {
-            TokenValue::Instance(mut instance) => {
+            TokenValue::Instance(instance) => {
                 instance
+                    .write()
+                    .unwrap()
                     .fields
                     .define(name.lexeme.to_owned(), value.clone());
                 Ok(value)

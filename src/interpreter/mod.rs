@@ -67,7 +67,7 @@ impl Interpreter {
             InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
                     is: value,
-                    expect: TokenValue::Number(0.0),
+                    expect: "Number".to_string(),
                 },
                 token: Some(token.clone()),
             }
@@ -260,10 +260,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
                     is: object,
-                    expect: TokenValue::Instance(Instance::new(Class {
-                        name: String::new(),
-                        methods: HashMap::new(),
-                    })),
+                    expect: "Instance".to_string(),
                 },
                 token: Some(name.to_owned()),
             }
@@ -331,10 +328,7 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
             _ => Err(InterpreterError {
                 message: InterpreterErrorMessage::UnexpectedValue {
                     is: object,
-                    expect: TokenValue::Instance(Instance::new(Class {
-                        name: String::new(),
-                        methods: HashMap::new(),
-                    })),
+                    expect: "Instace".to_string(),
                 },
                 token: Some(name.to_owned()),
             }

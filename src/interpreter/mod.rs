@@ -345,7 +345,16 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_this(&mut self, keyword: &Token) -> Result<TokenValue> {
-        todo!()
+        match self.environment.get(keyword) {
+            Some(val) => Ok(val),
+            None => Err(InterpreterError {
+                message: InterpreterErrorMessage::UndefinedVariable {
+                    lexeme: keyword.lexeme.clone(),
+                },
+                token: Some(keyword.to_owned()),
+            }
+            .into()),
+        }
     }
 
     fn visit_unary(&mut self, operator: &Token, right: &mut Expression) -> Result<TokenValue> {

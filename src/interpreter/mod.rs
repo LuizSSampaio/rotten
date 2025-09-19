@@ -104,6 +104,17 @@ impl Interpreter {
                 this: None,
             },
             call: |interpreter, data, args| {
+                if data.params.len() != args.len() {
+                    return Err(InterpreterError {
+                        message: InterpreterErrorMessage::ArgumentMismatch {
+                            has: args.len(),
+                            expect: data.params.len(),
+                        },
+                        token: None,
+                    }
+                    .into());
+                }
+
                 interpreter.environment.create_environment();
 
                 if let Some(this) = data.this.clone() {
@@ -231,17 +242,6 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
 
         match callee {
             TokenValue::Function(mut func) => {
-                if func.data.params.len() != val_arguments.len() {
-                    return Err(InterpreterError {
-                        message: InterpreterErrorMessage::ArgumentMismatch {
-                            has: val_arguments.len(),
-                            expect: func.data.params.len(),
-                        },
-                        token: Some(paren.to_owned()),
-                    }
-                    .into());
-                }
-
                 Ok((func.call)(self, &mut func.data, &val_arguments)?)
             }
             TokenValue::Class(class) => Ok(TokenValue::Instance(Instance::new(class.clone()))),

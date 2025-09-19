@@ -11,14 +11,14 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Instance {
-    pub class: Class,
+    pub class: Arc<Class>,
     pub fields: Environment,
     this: Option<Arc<RwLock<Instance>>>,
 }
 
 impl Instance {
     pub fn new(
-        class: Class,
+        class: Arc<Class>,
         interpreter: &mut Interpreter,
         arguments: Vec<TokenValue>,
     ) -> anyhow::Result<Arc<RwLock<Self>>> {
@@ -31,7 +31,7 @@ impl Instance {
         let res = Arc::new(RwLock::new(this));
         res.write().unwrap().this = Some(res.clone());
 
-        if let Some(initializer) = res.read().unwrap().class.methods.get(&class.name) {
+        if let Some(initializer) = res.read().unwrap().class.get(class.name.to_owned()) {
             let mut initializer = initializer.to_owned();
             initializer.data.this = Some(res.clone());
             (initializer.call)(interpreter, &mut initializer.data, &arguments)?;
@@ -49,7 +49,7 @@ impl Instance {
             return Some(TokenValue::Instance(self.this.clone().unwrap()));
         }
 
-        if let Some(method) = self.class.methods.get(&name.lexeme) {
+        if let Some(method) = self.class.get(name.lexeme.clone()) {
             let mut method = method.to_owned();
             method.data.this = self.this.clone();
             return Some(TokenValue::Function(method));

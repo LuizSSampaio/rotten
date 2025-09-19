@@ -1,9 +1,36 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::token::value::function::Function;
 
 #[derive(Debug, Clone)]
 pub struct Class {
     pub name: String,
-    pub methods: HashMap<String, Function>,
+    superclass: Option<Arc<Class>>,
+    methods: HashMap<String, Function>,
+}
+
+impl Class {
+    pub fn new(
+        name: String,
+        superclass: Option<Arc<Class>>,
+        methods: HashMap<String, Function>,
+    ) -> Self {
+        Self {
+            name,
+            superclass,
+            methods,
+        }
+    }
+
+    pub fn get(&self, identifier: String) -> Option<Function> {
+        if let Some(method) = self.methods.get(&identifier) {
+            return Some(method.to_owned());
+        }
+
+        if let Some(superclass) = &self.superclass {
+            return superclass.get(identifier);
+        }
+
+        None
+    }
 }

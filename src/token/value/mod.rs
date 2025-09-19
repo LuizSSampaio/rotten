@@ -15,7 +15,7 @@ pub enum TokenValue {
     Number(f64),
     String(String),
     Function(Function),
-    Class(Class),
+    Class(Arc<Class>),
     Instance(Arc<RwLock<Instance>>),
     Nil,
 }

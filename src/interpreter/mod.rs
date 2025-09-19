@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{
     interpreter::error::{InterpreterError, InterpreterErrorMessage, ReturnValue},
@@ -425,6 +425,26 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
         superclass: &mut Option<Box<Expression>>,
         methods: &mut [Statement],
     ) -> Result<Option<TokenValue>> {
+        let superclass = match superclass {
+            Some(val) => {
+                let val = self.evaluate(val)?;
+                match val {
+                    TokenValue::Class(class) => Some(class),
+                    _ => {
+                        return Err(InterpreterError {
+                            message: InterpreterErrorMessage::UnexpectedValue {
+                                is: val,
+                                expect: "Class".to_string(),
+                            },
+                            token: Some(name.to_owned()),
+                        }
+                        .into());
+                    }
+                }
+            }
+            None => None,
+        };
+
         self.environment
             .define(name.lexeme.clone(), TokenValue::Nil)?;
 
@@ -447,10 +467,11 @@ impl StatementVisitor<Result<Option<TokenValue>>> for Interpreter {
             }
         }
 
-        let class = TokenValue::Class(Class {
-            name: name.lexeme.clone(),
-            methods: methods_map,
-        });
+        let class = TokenValue::Class(Arc::new(Class::new(
+            name.lexeme.clone(),
+            superclass,
+            methods_map,
+        )));
 
         self.environment.assign(name, class.clone())?;
         Ok(Some(class))

@@ -27,6 +27,10 @@ impl Class {
             return Some(method.to_owned());
         }
 
+        self.get_from_super(identifier)
+    }
+
+    pub fn get_from_super(&self, identifier: String) -> Option<Function> {
         if let Some(superclass) = &self.superclass {
             return superclass.get(identifier);
         }

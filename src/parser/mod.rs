@@ -365,6 +365,14 @@ impl Parser {
             return Ok(Expression::Literal { value });
         }
 
+        if self.match_tokens(&[TokenType::Super]) {
+            let keyword = self.previous()?;
+            self.consume(TokenType::Dot)?;
+            let method = self.consume(TokenType::Identifier)?;
+
+            return Ok(Expression::Super { keyword, method });
+        }
+
         if self.match_tokens(&[TokenType::This]) {
             return Ok(Expression::This {
                 keyword: self.previous()?,

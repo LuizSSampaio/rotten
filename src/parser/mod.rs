@@ -1,3 +1,5 @@
+use std::ffi::FromBytesUntilNulError;
+
 use anyhow::Result;
 
 use crate::{
@@ -410,6 +412,14 @@ impl Parser {
     fn class_declaration(&mut self) -> Result<Statement> {
         let name = self.consume(TokenType::Identifier)?;
 
+        let mut superclass = None;
+        if self.match_tokens(&[TokenType::Less]) {
+            self.consume(TokenType::Identifier)?;
+            superclass = Some(Box::new(Expression::Variable {
+                name: self.previous()?,
+            }))
+        }
+
         self.consume(TokenType::LeftBrace)?;
         let mut methods = Vec::new();
         while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
@@ -419,7 +429,7 @@ impl Parser {
 
         Ok(Statement::Class {
             name,
-            superclass: None,
+            superclass,
             methods,
         })
     }

@@ -120,7 +120,11 @@ impl Interpreter {
                 if let Some(this) = data.this.clone() {
                     interpreter
                         .environment
-                        .define("this".to_string(), TokenValue::Instance(this))?;
+                        .define("this".to_string(), TokenValue::Instance(this.clone()))?;
+
+                    interpreter
+                        .environment
+                        .define("super".to_string(), TokenValue::Instance(this))?;
                 }
 
                 for (index, param) in args.iter().enumerate() {
@@ -346,7 +350,31 @@ impl ExpressionVisitor<Result<TokenValue>> for Interpreter {
     }
 
     fn visit_super(&mut self, keyword: &Token, method: &Token) -> Result<TokenValue> {
-        todo!()
+        if let Some(instance) = self.environment.get(keyword)
+            && let TokenValue::Instance(instance) = instance
+        {
+            return match instance
+                .clone()
+                .read()
+                .unwrap()
+                .class
+                .get_from_super(method.lexeme.to_owned())
+            {
+                Some(mut method) => {
+                    method.data.this = Some(instance);
+                    return Ok(TokenValue::Function(method));
+                }
+                None => Ok(TokenValue::Nil),
+            };
+        }
+
+        Err(InterpreterError {
+            message: InterpreterErrorMessage::UndefinedVariable {
+                lexeme: keyword.lexeme.clone(),
+            },
+            token: Some(keyword.to_owned()),
+        }
+        .into())
     }
 
     fn visit_this(&mut self, keyword: &Token) -> Result<TokenValue> {

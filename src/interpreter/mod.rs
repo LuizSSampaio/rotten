@@ -11,7 +11,8 @@ use crate::{
         Token,
         kind::TokenType,
         value::{
-            Class, TokenValue,
+            TokenValue,
+            class::Class,
             function::{Function, FunctionData},
             instance::Instance,
         },

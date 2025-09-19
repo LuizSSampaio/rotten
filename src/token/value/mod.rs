@@ -1,19 +1,13 @@
 use std::{
-    collections::HashMap,
     fmt::Display,
     sync::{Arc, RwLock},
 };
 
-use crate::token::value::{function::Function, instance::Instance};
+use crate::token::value::{class::Class, function::Function, instance::Instance};
 
+pub mod class;
 pub mod function;
 pub mod instance;
-
-#[derive(Debug, Clone)]
-pub struct Class {
-    pub name: String,
-    pub methods: HashMap<String, Function>,
-}
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {
